@@ -1,8 +1,7 @@
 check_wut_health Nagios Plugin README
 ---------------------
 
-This plugin checks the sensors of a Wiesemann & Theis Web
-of uninterruptible power supplies
+This plugin checks the sensors of a Wiesemann & Theis Web Thermometer
 
 Copyright (C) Gerhard Lausser, gerhard.lausser@consol.de
 
