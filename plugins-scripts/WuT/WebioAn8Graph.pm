@@ -6,6 +6,7 @@ use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub init {
   my $self = shift;
+  $self->SUPER::init();
   if ($self->mode =~ /device::sensor::status/) {
     $self->analyze_sensor_subsystem();
     $self->check_sensor_subsystem();
@@ -29,6 +30,10 @@ use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub init {
   my $self = shift;
+  $GLPlugin::SNMP::session->translate([
+    '-octetstring' => 0x1,
+    # force wtWebioAn8GraphAlarmTrigger in a 0xstring format
+  ]);
   $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphDiagErrorCount));
   $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphSensors));
   $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphAlarmCount));
@@ -53,6 +58,9 @@ sub init {
         if ($sensor->{wtWebioAn8GraphPortName} =~ /^0x/) {
           $sensor->{wtWebioAn8GraphPortName} =~ s/\s//g;
           $sensor->{wtWebioAn8GraphPortName} =~ s/0x(([0-9a-f][0-9a-f])+)/pack('H*', $1)/ie;
+        }elsif ($sensor->{wtWebioAn8GraphPortName} =~ /^(?:[0-9a-f]{2} )+[0-9a-f]{2}$/i) {
+          $sensor->{wtWebioAn8GraphPortName} =~ s/\s//g;
+          $sensor->{wtWebioAn8GraphPortName} =~ s/(([0-9a-f][0-9a-f])+)/pack('H*', $1)/ie;
         }
       }
     }
@@ -133,6 +141,9 @@ our @ISA = qw(GLPlugin::TableItem);
 sub belongs_to {
   my $self = shift;
   my $trigger = $self->{wtWebioAn8GraphAlarmTrigger};
+  if ($trigger !~ /^0x/) {
+    $trigger = "0x ".$trigger;
+  }
   $trigger =~ s/\s//g;
   if (oct($trigger) & oct("0b00000000000000000000000000000001")) {
     return 1;
