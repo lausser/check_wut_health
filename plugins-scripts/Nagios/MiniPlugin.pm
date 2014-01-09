@@ -211,11 +211,17 @@ sub set_thresholds {
     my $metric = $params{metric};
     $self->{thresholds}->{$metric}->{warning} = $params{warning};
     $self->{thresholds}->{$metric}->{critical} = $params{critical};
+    if ($self->opts->warning) {
+      $self->{thresholds}->{$metric}->{warning} = $self->opts->warning;
+    }
     if ($self->opts->warningx) {
       foreach my $key (keys %{$self->opts->warningx}) {
         next if $key ne $metric;
         $self->{thresholds}->{$metric}->{warning} = $self->opts->warningx->{$key};
       }
+    }
+    if ($self->opts->critical) {
+      $self->{thresholds}->{$metric}->{critical} = $self->opts->critical;
     }
     if ($self->opts->criticalx) {
       foreach my $key (keys %{$self->opts->criticalx}) {
@@ -277,7 +283,9 @@ sub check_thresholds {
     $warningrange = $self->{thresholds}->{default}->{warning};
     $criticalrange = $self->{thresholds}->{default}->{critical};
   }
-  if ($warningrange =~ /^(\d+)$/) {
+  if (! defined $warningrange) {
+    # there was no set_thresholds for defaults, no --warning, no --warningx
+  } elsif ($warningrange =~ /^(\d+)$/) {
     # warning = 10, warn if > 10 or < 0
     $level = $ERRORS{WARNING}
         if ($value > $1 || $value < 0);
@@ -298,7 +306,9 @@ sub check_thresholds {
     $level = $ERRORS{WARNING}
         if ($value >= $1 && $value <= $2);
   }
-  if ($criticalrange =~ /^(\d+)$/) {
+  if (! defined $criticalrange) {
+    # there was no set_thresholds for defaults, no --critical, no --criticalx
+  } elsif ($criticalrange =~ /^(\d+)$/) {
     # critical = 10, crit if > 10 or < 0
     $level = $ERRORS{CRITICAL}
         if ($value > $1 || $value < 0);

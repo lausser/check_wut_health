@@ -43,6 +43,9 @@ sub new {
       if ($self->implements_mib('WebGraph-8xThermometer-MIB')) {
         bless $self, 'WuT::WebioAn8Graph';
         $self->debug('using WuT::WebioAn8Graph');
+      } elsif ($self->implements_mib('WebGraph-Thermo-Hygro-Barometer-MIB')) {
+        bless $self, 'WuT::WebGraphThermoBaro';
+        $self->debug('using WuT::WebGraphThermoBaro');
       } else {
         if (my $class = $self->discover_suitable_class()) {
           bless $self, $class;

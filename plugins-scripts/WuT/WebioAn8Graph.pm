@@ -10,9 +10,18 @@ sub init {
   if ($self->mode =~ /device::sensor::status/) {
     $self->analyze_sensor_subsystem();
     $self->check_sensor_subsystem();
+  } elsif ($self->mode =~ /device::hardware::health/) {
+    $self->analyze_diag_subsystem();
+    $self->check_diag_subsystem();
   } else {
     $self->no_such_mode();
   }
+}
+
+sub analyze_diag_subsystem {
+  my $self = shift;
+  $self->{components}->{diag_subsystem} =
+      WuT::WebioAn8Graph::DiagSubsystem->new();
 }
 
 sub analyze_sensor_subsystem {
@@ -21,6 +30,30 @@ sub analyze_sensor_subsystem {
       WuT::WebioAn8Graph::SensorSubsystem->new();
 }
 
+
+package WuT::WebioAn8Graph::DiagSubsystem;
+our @ISA = qw(GLPlugin::Item WuT::WebioAn8Graph);
+
+use strict;
+use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
+
+sub init {
+  my $self = shift;
+  $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphDiagErrorCount));
+  $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphDiagErrorMessage));
+}
+
+sub check {
+  my $self = shift;
+  if ($self->{wtWebioAn8GraphDiagErrorCount}) {
+    $self->add_message(CRITICAL,
+        sprintf "diag error count is %d (%s)", 
+        $self->{wtWebioAn8GraphDiagErrorCount},
+        $self->{wtWebioAn8GraphDiagErrorMessage});
+  } else {
+    $self->add_message(OK, "environmental hardware working fine");
+  }
+}
 
 package WuT::WebioAn8Graph::SensorSubsystem;
 our @ISA = qw(GLPlugin::Item WuT::WebioAn8Graph);
@@ -34,7 +67,6 @@ sub init {
     '-octetstring' => 0x1,
     # force wtWebioAn8GraphAlarmTrigger in a 0xstring format
   ]);
-  $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphDiagErrorCount));
   $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphSensors));
   $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphAlarmCount));
   $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphPorts));
@@ -44,6 +76,7 @@ sub init {
       ["alarmsf", "wtWebioAn8GraphAlarmIfTable", "WuT::WebioAn8Graph::SensorSubsystem::AlarmIf"],
       ["ports", "wtWebioAn8GraphPortTable", "WuT::WebioAn8Graph::SensorSubsystem::Port"],
   ]);
+  @{$self->{sensors}} = grep { $self->filter_name($_->{flat_indices}) } @{$self->{sensors}};
   foreach my $sensor (@{$self->{sensors}}) {
     $sensor->{wtWebioAn8GraphBinaryTempValue} /= 10;
     $sensor->{alarms} = [];
@@ -58,10 +91,11 @@ sub init {
         if ($sensor->{wtWebioAn8GraphPortName} =~ /^0x/) {
           $sensor->{wtWebioAn8GraphPortName} =~ s/\s//g;
           $sensor->{wtWebioAn8GraphPortName} =~ s/0x(([0-9a-f][0-9a-f])+)/pack('H*', $1)/ie;
-        }elsif ($sensor->{wtWebioAn8GraphPortName} =~ /^(?:[0-9a-f]{2} )+[0-9a-f]{2}$/i) {
+        } elsif ($sensor->{wtWebioAn8GraphPortName} =~ /^(?:[0-9a-f]{2} )+[0-9a-f]{2}$/i) {
           $sensor->{wtWebioAn8GraphPortName} =~ s/\s//g;
           $sensor->{wtWebioAn8GraphPortName} =~ s/(([0-9a-f][0-9a-f])+)/pack('H*', $1)/ie;
         }
+        $sensor->{wtWebioAn8GraphPortName} = $self->accentfree($sensor->{wtWebioAn8GraphPortName});
       }
     }
   }
@@ -69,10 +103,6 @@ sub init {
 
 sub check {
   my $self = shift;
-  if ($self->{wtWebioAn8GraphDiagErrorCount}) {
-    $self->add_message(CRITICAL,
-        sprintf "diag error count is %d", $self->{wtWebioAn8GraphDiagErrorCount});
-  }
   foreach (@{$self->{sensors}}) {
     $_->check();
   }
@@ -106,23 +136,27 @@ sub check {
   my $self = shift;
   if (scalar(@{$self->{alarms}})) {
     foreach my $alarm (@{$self->{alarms}}) {
-      if ("" ne $alarm->{wtWebioAn8GraphAlarmMin} && $alarm->{wtWebioAn8GraphAlarmMin} > $self->{wtWebioAn8GraphBinaryTempValue}) {
-        $self->add_message(CRITICAL, sprintf "temperature %s is too low: %s < %s (%s)", 
+      $self->set_thresholds(
+          metric => "temp_".$self->{wtWebioAn8GraphPortName}, 
+          warning => $alarm->{wtWebioAn8GraphAlarmMin}.":".$alarm->{wtWebioAn8GraphAlarmMax},
+          critical => $alarm->{wtWebioAn8GraphAlarmMin}.":".$alarm->{wtWebioAn8GraphAlarmMax});
+      if ($self->check_thresholds(
+          metric => "temp_".$self->{wtWebioAn8GraphPortName}, 
+          value => $self->{wtWebioAn8GraphBinaryTempValue})) {
+        $self->add_message($self->check_thresholds(
+          metric => "temp_".$self->{wtWebioAn8GraphPortName},
+          value => $self->{wtWebioAn8GraphBinaryTempValue}),
+          sprintf "temperature %s is out of range: [%s..._%s_...%s] (%s)",
             $self->{wtWebioAn8GraphPortName},
-            $self->{wtWebioAn8GraphBinaryTempValue},
-            $alarm->{wtWebioAn8GraphAlarmMin},
-            $alarm->{wtWebioAn8GraphAlarmMailText});
-      } elsif ("" ne $alarm->{wtWebioAn8GraphAlarmMax} && $alarm->{wtWebioAn8GraphAlarmMax} < $self->{wtWebioAn8GraphBinaryTempValue}) {
-        $self->add_message(CRITICAL, sprintf "temperature %s is too high: %s > %s (%s)", 
-            $self->{wtWebioAn8GraphPortName},
-            $alarm->{wtWebioAn8GraphAlarmMax},
-            $self->{wtWebioAn8GraphBinaryTempValue},
-            $alarm->{wtWebioAn8GraphAlarmMailText});
-      } else {
-        $self->add_message(OK, sprintf "temperature %s is in range: %s [%s...%s]",
-            $self->{wtWebioAn8GraphPortName},
-            $self->{wtWebioAn8GraphBinaryTempValue},
             defined $alarm->{wtWebioAn8GraphAlarmMin} ? $alarm->{wtWebioAn8GraphAlarmMin} : "-",
+            $self->{wtWebioAn8GraphBinaryTempValue},
+            defined $alarm->{wtWebioAn8GraphAlarmMax} ? $alarm->{wtWebioAn8GraphAlarmMax} : "-",
+            $self->{wtWebioAn8GraphAlarmMailText});
+      } else {
+        $self->add_message(OK, sprintf "temperature %s is in range: [%s..._%s_...%s]",
+            $self->{wtWebioAn8GraphPortName},
+            defined $alarm->{wtWebioAn8GraphAlarmMin} ? $alarm->{wtWebioAn8GraphAlarmMin} : "-",
+            $self->{wtWebioAn8GraphBinaryTempValue},
             defined $alarm->{wtWebioAn8GraphAlarmMax} ? $alarm->{wtWebioAn8GraphAlarmMax} : "-");
       }
       $self->add_perfdata(
@@ -130,8 +164,26 @@ sub check {
           value => $self->{wtWebioAn8GraphBinaryTempValue},
           min => $alarm->{wtWebioAn8GraphAlarmMin},
           max => $alarm->{wtWebioAn8GraphAlarmMax},
+          warning => ($self->get_thresholds(metric => "temp_".$self->{wtWebioAn8GraphPortName}))[0],
+          critical => ($self->get_thresholds(metric => "temp_".$self->{wtWebioAn8GraphPortName}))[1],
       );
     }
+  } else {
+    $self->set_thresholds(
+        metric => "temp_".$self->{wtWebioAn8GraphPortName}, 
+        warning => undef,
+        critical => undef);
+    $self->add_message($self->check_thresholds(
+          metric => "temp_".$self->{wtWebioAn8GraphPortName},
+          value => $self->{wtWebioAn8GraphBinaryTempValue}), sprintf "temperature %s is %s",
+        $self->{wtWebioAn8GraphPortName},
+        $self->{wtWebioAn8GraphBinaryTempValue});
+    $self->add_perfdata(
+        label => "temp_".$self->{wtWebioAn8GraphPortName},
+        value => $self->{wtWebioAn8GraphBinaryTempValue},
+        warning => ($self->get_thresholds(metric => "temp_".$self->{wtWebioAn8GraphPortName}))[0],
+        critical => ($self->get_thresholds(metric => "temp_".$self->{wtWebioAn8GraphPortName}))[1],
+    );
   }
 }
 

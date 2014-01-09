@@ -14,6 +14,7 @@ MY_MODULES=
 EXTRA_MODULES=\
   Nagios/MiniPlugin.pm \
   GLPlugin.pm \
+  WuT/WebGraphThermoBaro.pm \
   WuT/WebioAn8Graph.pm \
   WuT/MibsAndOids.pm \
   WuT/Device.pm
