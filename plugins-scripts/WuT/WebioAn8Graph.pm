@@ -76,7 +76,11 @@ sub init {
       ["alarmsf", "wtWebioAn8GraphAlarmIfTable", "WuT::WebioAn8Graph::SensorSubsystem::AlarmIf"],
       ["ports", "wtWebioAn8GraphPortTable", "WuT::WebioAn8Graph::SensorSubsystem::Port"],
   ]);
-  @{$self->{sensors}} = grep { $self->filter_name($_->{flat_indices}) } @{$self->{sensors}};
+  @{$self->{sensors}} = grep {
+      $_->{wtWebioAn8GraphBinaryTempValue} != 327670
+  } grep {
+      $self->filter_name($_->{flat_indices})
+  } @{$self->{sensors}};
   foreach my $sensor (@{$self->{sensors}}) {
     $sensor->{wtWebioAn8GraphBinaryTempValue} /= 10;
     $sensor->{alarms} = [];
