@@ -147,6 +147,12 @@ sub check {
       if ($self->check_thresholds(
           metric => "temp_".$self->{wtWebioAn8GraphPortName}, 
           value => $self->{wtWebioAn8GraphBinaryTempValue})) {
+        if ($alarm->{wtWebioAn8GraphAlarmMailText} =~ /^0x/) {
+          $alarm->{wtWebioAn8GraphAlarmMailText} =~ s/^0x//g;
+          $alarm->{wtWebioAn8GraphAlarmMailText} =~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
+        }
+        $alarm->{wtWebioAn8GraphAlarmMailText} =~ s/\n/ /g;
+        $alarm->{wtWebioAn8GraphAlarmMailText} =~ s/\s{2,}/ /g;
         $self->add_message($self->check_thresholds(
           metric => "temp_".$self->{wtWebioAn8GraphPortName},
           value => $self->{wtWebioAn8GraphBinaryTempValue}),
@@ -155,7 +161,7 @@ sub check {
             defined $alarm->{wtWebioAn8GraphAlarmMin} ? $alarm->{wtWebioAn8GraphAlarmMin} : "-",
             $self->{wtWebioAn8GraphBinaryTempValue},
             defined $alarm->{wtWebioAn8GraphAlarmMax} ? $alarm->{wtWebioAn8GraphAlarmMax} : "-",
-            $self->{wtWebioAn8GraphAlarmMailText});
+            $alarm->{wtWebioAn8GraphAlarmMailText});
       } else {
         $self->add_message(OK, sprintf "temperature %s is in range: [%s..._%s_...%s]",
             $self->{wtWebioAn8GraphPortName},

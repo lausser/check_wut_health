@@ -2,6 +2,9 @@
 # Changelog of the check_wut_health plugin #
 ############################################
 
+2014-03-04  1.0.1
+- bugfix in webioan8graph alert text
+
 2014-01-08
 - initial release
 
