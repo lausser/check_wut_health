@@ -156,6 +156,12 @@ sub check {
       if ($self->check_thresholds(
           metric => $self->{label}."_".$self->{wtWebGraphThermoBaroPortName},
           value => $self->{wtWebGraphThermoBaroBinaryTempValue})) {
+        if ($alarm->{wtWebGraphThermoBaroAlarmMailText} =~ /^0x(.*)/) {
+          $alarm->{wtWebGraphThermoBaroAlarmMailText} = $1;
+          $alarm->{wtWebGraphThermoBaroAlarmMailText} =~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
+          $alarm->{wtWebGraphThermoBaroAlarmMailText} =~ s/[[:cntrl:]]+//g;
+          $alarm->{wtWebGraphThermoBaroAlarmMailText} =~ s/\|/ /g;
+        }
         $self->add_message($self->check_thresholds(
           metric => $self->{label}."_".$self->{wtWebGraphThermoBaroPortName},
           value => $self->{wtWebGraphThermoBaroBinaryTempValue}),
@@ -165,7 +171,7 @@ sub check {
             defined $alarm->{wtWebGraphThermoBaroAlarmMin} ? $alarm->{wtWebGraphThermoBaroAlarmMin} : "-",
             $self->{wtWebGraphThermoBaroBinaryTempValue},
             defined $alarm->{wtWebGraphThermoBaroAlarmMax} ? $alarm->{wtWebGraphThermoBaroAlarmMax} : "-",
-            $self->{wtWebGraphThermoBaroAlarmMailText});
+            $alarm->{wtWebGraphThermoBaroAlarmMailText});
       } else {
         $self->add_message(OK, sprintf "%s %s is in range: [%s..._%s_...%s]",
             $self->{label},
