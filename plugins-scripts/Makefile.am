@@ -12,12 +12,12 @@ VPATH=$(top_srcdir) $(top_srcdir)/plugins-scripts $(top_srcdir)/plugins-scripts/
 libexec_SCRIPTS=check_wut_health
 MY_MODULES=
 EXTRA_MODULES=\
-  Nagios/MiniPlugin.pm \
   GLPlugin.pm \
-  WuT/WebGraphThermoBaro.pm \
-  WuT/WebioAn8Graph.pm \
-  WuT/MibsAndOids.pm \
-  WuT/Device.pm
+  GLPluginSNMP.pm \
+  Classes/WebGraphThermoBaro.pm \
+  Classes/WebioAn8Graph.pm \
+  Classes/MibsAndOids.pm \
+  Classes/Device.pm
 EXTRA_DIST=check_wut_health.pl $(EXTRA_MODULES)
 
 CLEANFILES=$(libexec_SCRIPTS)

@@ -1,65 +1,44 @@
-package WuT::WebGraphThermoBaro;
-our @ISA = qw(WuT::Device);
-
+package Classes::WebGraphThermoBaro;
+our @ISA = qw(Classes::Device);
 use strict;
-use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub init {
   my $self = shift;
-  $self->SUPER::init();
   if ($self->mode =~ /device::sensor::status/) {
-    $self->analyze_sensor_subsystem();
-    $self->check_sensor_subsystem();
+    $self->analyze_and_check_sensor_subsystem("Classes::WebGraphThermoBaro::SensorSubsystem");
   } elsif ($self->mode =~ /device::hardware::health/) {
-    $self->analyze_diag_subsystem();
-    $self->check_diag_subsystem();
+    $self->analyze_and_check_diag_subsystem("Classes::WebGraphThermoBaro::DiagSubsystem");
   } else {
     $self->no_such_mode();
   }
 }
 
-sub analyze_diag_subsystem {
-  my $self = shift;
-  $self->{components}->{diag_subsystem} =
-      WuT::WebGraphThermoBaro::DiagSubsystem->new();
-}
 
-sub analyze_sensor_subsystem {
-  my $self = shift;
-  $self->{components}->{sensor_subsystem} =
-      WuT::WebGraphThermoBaro::SensorSubsystem->new();
-}
-
-
-package WuT::WebGraphThermoBaro::DiagSubsystem;
-our @ISA = qw(GLPlugin::Item WuT::WebGraphThermoBaro);
-
+package Classes::WebGraphThermoBaro::DiagSubsystem;
+our @ISA = qw(GLPlugin::SNMP::Item);
 use strict;
-use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub init {
   my $self = shift;
-  $self->get_snmp_objects("WebGraph-Thermo-Hygro-Barometer-MIB", qw(wtWebGraphThermoBaroDiagErrorCount));
-  $self->get_snmp_objects("WebGraph-Thermo-Hygro-Barometer-MIB", qw(wtWebGraphThermoBaroDiagErrorMessage));
+  $self->get_snmp_objects("WebGraph-Thermo-Hygro-Barometer-MIB", 
+      qw(wtWebGraphThermoBaroDiagErrorCount wtWebGraphThermoBaroDiagErrorMessage));
 }
 
 sub check {
   my $self = shift;
   if ($self->{wtWebGraphThermoBaroDiagErrorCount}) {
-    $self->add_message(CRITICAL,
-        sprintf "diag error count is %d (%s)",
+    $self->add_info(sprintf "diag error count is %d (%s)",
         $self->{wtWebGraphThermoBaroDiagErrorCount},
         $self->{wtWebGraphThermoBaroDiagErrorMessage});
+    $self->add_critical();
   } else {
-    $self->add_message(OK, "environmental hardware working fine");
+    $self->add_ok("environmental hardware working fine");
   }
 }
 
-package WuT::WebGraphThermoBaro::SensorSubsystem;
-our @ISA = qw(GLPlugin::Item WuT::WebGraphThermoBaro);
-
+package Classes::WebGraphThermoBaro::SensorSubsystem;
+our @ISA = qw(GLPlugin::SNMP::Item);
 use strict;
-use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub init {
   my $self = shift;
@@ -67,14 +46,13 @@ sub init {
     '-octetstring' => 0x1,
     # force wtWebGraphThermoBaroAlarmTrigger in a 0xstring format
   ]);
-  $self->get_snmp_objects("WebGraph-Thermo-Hygro-Barometer-MIB", qw(wtWebGraphThermoBaroSensors));
-  $self->get_snmp_objects("WebGraph-Thermo-Hygro-Barometer-MIB", qw(wtWebGraphThermoBaroAlarmCount));
-  $self->get_snmp_objects("WebGraph-Thermo-Hygro-Barometer-MIB", qw(wtWebGraphThermoBaroPorts));
+  $self->get_snmp_objects("WebGraph-Thermo-Hygro-Barometer-MIB",
+      qw(wtWebGraphThermoBaroSensors wtWebGraphThermoBaroAlarmCount wtWebGraphThermoBaroPorts));
   $self->get_snmp_tables("WebGraph-Thermo-Hygro-Barometer-MIB", [
-      ["sensors", "wtWebGraphThermoBaroBinaryTempValueTable", "WuT::WebGraphThermoBaro::SensorSubsystem::Sensor"],
-      ["alarms", "wtWebGraphThermoBaroAlarmTable", "WuT::WebGraphThermoBaro::SensorSubsystem::Alarm"],
-      ["alarmsf", "wtWebGraphThermoBaroAlarmIfTable", "WuT::WebGraphThermoBaro::SensorSubsystem::AlarmIf"],
-      ["ports", "wtWebGraphThermoBaroPortTable", "WuT::WebGraphThermoBaro::SensorSubsystem::Port"],
+      ["sensors", "wtWebGraphThermoBaroBinaryTempValueTable", "Classes::WebGraphThermoBaro::SensorSubsystem::Sensor"],
+      ["alarms", "wtWebGraphThermoBaroAlarmTable", "Classes::WebGraphThermoBaro::SensorSubsystem::Alarm"],
+      ["alarmsf", "wtWebGraphThermoBaroAlarmIfTable", "Classes::WebGraphThermoBaro::SensorSubsystem::AlarmIf"],
+      ["ports", "wtWebGraphThermoBaroPortTable", "Classes::WebGraphThermoBaro::SensorSubsystem::Port"],
   ]);
   @{$self->{sensors}} = grep { $self->filter_name($_->{flat_indices}) } @{$self->{sensors}};
   foreach my $sensor (@{$self->{sensors}}) {
@@ -102,46 +80,19 @@ sub init {
   }
 }
 
-sub check {
-  my $self = shift;
-  foreach (@{$self->{sensors}}) {
-    $_->check();
-  }
-}
 
-sub dump {
-  my $self = shift;
-  printf "[SENSORS]\n";
-  foreach (qw(wtWebGraphThermoBaroSensors wtWebGraphThermoBaroAlarmCount)) {
-    printf "%s: %s\n", $_, $self->{$_};
-  }
-  foreach (@{$self->{sensors}}) {
-    $_->dump();
-  }
-  foreach (@{$self->{alarms}}) {
-    $_->dump();
-  }
-  foreach (@{$self->{ports}}) {
-    $_->dump();
-  }
-}
-
-
-package WuT::WebGraphThermoBaro::SensorSubsystem::Sensor;
-our @ISA = qw(GLPlugin::TableItem);
-
+package Classes::WebGraphThermoBaro::SensorSubsystem::Sensor;
+our @ISA = qw(GLPlugin::SNMP::TableItem);
 use strict;
-use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub rebless {
   my $self = shift;
-#  $self->SUPER::init();
   if ($self->{wtWebGraphThermoBaroPortName} =~ /temp/i) {
-    bless $self, "WuT::WebGraphThermoBaro::SensorSubsystem::Sensor::Temperature";
+    bless $self, "Classes::WebGraphThermoBaro::SensorSubsystem::Sensor::Temperature";
   } elsif ($self->{wtWebGraphThermoBaroPortName} =~ /humi/i) {
-    bless $self, "WuT::WebGraphThermoBaro::SensorSubsystem::Sensor::Humidity";
+    bless $self, "Classes::WebGraphThermoBaro::SensorSubsystem::Sensor::Humidity";
   } elsif ($self->{wtWebGraphThermoBaroPortName} =~ /press/i) {
-    bless $self, "WuT::WebGraphThermoBaro::SensorSubsystem::Sensor::Pressure";
+    bless $self, "Classes::WebGraphThermoBaro::SensorSubsystem::Sensor::Pressure";
   }
 }
 
@@ -173,7 +124,7 @@ sub check {
             defined $alarm->{wtWebGraphThermoBaroAlarmMax} ? $alarm->{wtWebGraphThermoBaroAlarmMax} : "-",
             $alarm->{wtWebGraphThermoBaroAlarmMailText});
       } else {
-        $self->add_message(OK, sprintf "%s %s is in range: [%s..._%s_...%s]",
+        $self->add_ok(sprintf "%s %s is in range: [%s..._%s_...%s]",
             $self->{label},
             $self->{wtWebGraphThermoBaroPortName},
             defined $alarm->{wtWebGraphThermoBaroAlarmMin} ? $alarm->{wtWebGraphThermoBaroAlarmMin} : "-",
@@ -210,8 +161,8 @@ sub check {
   }
 }
 
-package WuT::WebGraphThermoBaro::SensorSubsystem::Alarm;
-our @ISA = qw(GLPlugin::TableItem);
+package Classes::WebGraphThermoBaro::SensorSubsystem::Alarm;
+our @ISA = qw(GLPlugin::SNMP::TableItem);
 
 sub belongs_to {
   my $self = shift;
@@ -241,16 +192,16 @@ sub belongs_to {
   }
 }
 
-package WuT::WebGraphThermoBaro::SensorSubsystem::AlarmIf;
-our @ISA = qw(GLPlugin::TableItem);
+package Classes::WebGraphThermoBaro::SensorSubsystem::AlarmIf;
+our @ISA = qw(GLPlugin::SNMP::TableItem);
 
 
-package WuT::WebGraphThermoBaro::SensorSubsystem::Port;
-our @ISA = qw(GLPlugin::TableItem);
+package Classes::WebGraphThermoBaro::SensorSubsystem::Port;
+our @ISA = qw(GLPlugin::SNMP::TableItem);
 
 
-package WuT::WebGraphThermoBaro::SensorSubsystem::Sensor::Temperature;
-our @ISA = qw(WuT::WebGraphThermoBaro::SensorSubsystem::Sensor);
+package Classes::WebGraphThermoBaro::SensorSubsystem::Sensor::Temperature;
+our @ISA = qw(Classes::WebGraphThermoBaro::SensorSubsystem::Sensor);
 
 sub check {
   my $self = shift;
@@ -259,8 +210,8 @@ sub check {
   $self->SUPER::check();
 }
 
-package WuT::WebGraphThermoBaro::SensorSubsystem::Sensor::Humidity;
-our @ISA = qw(WuT::WebGraphThermoBaro::SensorSubsystem::Sensor);
+package Classes::WebGraphThermoBaro::SensorSubsystem::Sensor::Humidity;
+our @ISA = qw(Classes::WebGraphThermoBaro::SensorSubsystem::Sensor);
 
 sub check {
   my $self = shift;
@@ -270,8 +221,8 @@ sub check {
 }
 
 
-package WuT::WebGraphThermoBaro::SensorSubsystem::Sensor::Pressure;
-our @ISA = qw(WuT::WebGraphThermoBaro::SensorSubsystem::Sensor);
+package Classes::WebGraphThermoBaro::SensorSubsystem::Sensor::Pressure;
+our @ISA = qw(Classes::WebGraphThermoBaro::SensorSubsystem::Sensor);
 
 sub check {
   my $self = shift;

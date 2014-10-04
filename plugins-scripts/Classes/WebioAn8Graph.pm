@@ -1,65 +1,44 @@
-package WuT::WebioAn8Graph;
-our @ISA = qw(WuT::Device);
-
+package Classes::WebioAn8Graph;
+our @ISA = qw(Classes::Device);
 use strict;
-use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub init {
   my $self = shift;
-  $self->SUPER::init();
   if ($self->mode =~ /device::sensor::status/) {
-    $self->analyze_sensor_subsystem();
-    $self->check_sensor_subsystem();
+    $self->analyze_and_check_sensor_subsystem("Classes::WebioAn8Graph::SensorSubsystem");
   } elsif ($self->mode =~ /device::hardware::health/) {
-    $self->analyze_diag_subsystem();
-    $self->check_diag_subsystem();
+    $self->analyze_and_check_diag_subsystem("Classes::WebioAn8Graph::DiagSubsystem");
   } else {
     $self->no_such_mode();
   }
 }
 
-sub analyze_diag_subsystem {
-  my $self = shift;
-  $self->{components}->{diag_subsystem} =
-      WuT::WebioAn8Graph::DiagSubsystem->new();
-}
 
-sub analyze_sensor_subsystem {
-  my $self = shift;
-  $self->{components}->{sensor_subsystem} =
-      WuT::WebioAn8Graph::SensorSubsystem->new();
-}
-
-
-package WuT::WebioAn8Graph::DiagSubsystem;
-our @ISA = qw(GLPlugin::Item WuT::WebioAn8Graph);
-
+package Classes::WebioAn8Graph::DiagSubsystem;
+our @ISA = qw(GLPlugin::SNMP::Item);
 use strict;
-use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub init {
   my $self = shift;
-  $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphDiagErrorCount));
-  $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphDiagErrorMessage));
+  $self->get_snmp_objects("WebGraph-8xThermometer-MIB", 
+      qw(wtWebioAn8GraphDiagErrorCount wtWebioAn8GraphDiagErrorMessage));
 }
 
 sub check {
   my $self = shift;
   if ($self->{wtWebioAn8GraphDiagErrorCount}) {
-    $self->add_message(CRITICAL,
-        sprintf "diag error count is %d (%s)", 
+    $self->add_info(sprintf "diag error count is %d (%s)", 
         $self->{wtWebioAn8GraphDiagErrorCount},
         $self->{wtWebioAn8GraphDiagErrorMessage});
+    $self->add_critical();
   } else {
-    $self->add_message(OK, "environmental hardware working fine");
+    $self->add_ok("environmental hardware working fine");
   }
 }
 
-package WuT::WebioAn8Graph::SensorSubsystem;
-our @ISA = qw(GLPlugin::Item WuT::WebioAn8Graph);
-
+package Classes::WebioAn8Graph::SensorSubsystem;
+our @ISA = qw(GLPlugin::SNMP::Item);
 use strict;
-use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub init {
   my $self = shift;
@@ -67,14 +46,13 @@ sub init {
     '-octetstring' => 0x1,
     # force wtWebioAn8GraphAlarmTrigger in a 0xstring format
   ]);
-  $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphSensors));
-  $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphAlarmCount));
-  $self->get_snmp_objects("WebGraph-8xThermometer-MIB", qw(wtWebioAn8GraphPorts));
+  $self->get_snmp_objects("WebGraph-8xThermometer-MIB",
+      qw(wtWebioAn8GraphSensors wtWebioAn8GraphAlarmCount wtWebioAn8GraphPorts));
   $self->get_snmp_tables("WebGraph-8xThermometer-MIB", [
-      ["sensors", "wtWebioAn8GraphBinaryTempValueTable", "WuT::WebioAn8Graph::SensorSubsystem::Sensor"],
-      ["alarms", "wtWebioAn8GraphAlarmTable", "WuT::WebioAn8Graph::SensorSubsystem::Alarm"],
-      ["alarmsf", "wtWebioAn8GraphAlarmIfTable", "WuT::WebioAn8Graph::SensorSubsystem::AlarmIf"],
-      ["ports", "wtWebioAn8GraphPortTable", "WuT::WebioAn8Graph::SensorSubsystem::Port"],
+      ["sensors", "wtWebioAn8GraphBinaryTempValueTable", "Classes::WebioAn8Graph::SensorSubsystem::Sensor"],
+      ["alarms", "wtWebioAn8GraphAlarmTable", "Classes::WebioAn8Graph::SensorSubsystem::Alarm"],
+      ["alarmsf", "wtWebioAn8GraphAlarmIfTable", "Classes::WebioAn8Graph::SensorSubsystem::AlarmIf"],
+      ["ports", "wtWebioAn8GraphPortTable", "Classes::WebioAn8Graph::SensorSubsystem::Port"],
   ]);
   @{$self->{sensors}} = grep {
       $_->{wtWebioAn8GraphBinaryTempValue} != 327670
@@ -105,36 +83,10 @@ sub init {
   }
 }
 
-sub check {
-  my $self = shift;
-  foreach (@{$self->{sensors}}) {
-    $_->check();
-  }
-}
 
-sub dump {
-  my $self = shift;
-  printf "[SENSORS]\n";
-  foreach (qw(wtWebioAn8GraphSensors wtWebioAn8GraphAlarmCount)) {
-    printf "%s: %s\n", $_, $self->{$_};
-  }
-  foreach (@{$self->{sensors}}) {
-    $_->dump();
-  }
-  foreach (@{$self->{alarms}}) {
-    $_->dump();
-  }
-  foreach (@{$self->{ports}}) {
-    $_->dump();
-  }
-}
-
-
-package WuT::WebioAn8Graph::SensorSubsystem::Sensor;
-our @ISA = qw(GLPlugin::TableItem);
-
+package Classes::WebioAn8Graph::SensorSubsystem::Sensor;
+our @ISA = qw(GLPlugin::SNMP::TableItem);
 use strict;
-use constant { OK => 0, WARNING => 1, CRITICAL => 2, UNKNOWN => 3 };
 
 sub check {
   my $self = shift;
@@ -163,7 +115,7 @@ sub check {
             defined $alarm->{wtWebioAn8GraphAlarmMax} ? $alarm->{wtWebioAn8GraphAlarmMax} : "-",
             $alarm->{wtWebioAn8GraphAlarmMailText});
       } else {
-        $self->add_message(OK, sprintf "temperature %s is in range: [%s..._%s_...%s]",
+        $self->add_ok(sprintf "temperature %s is in range: [%s..._%s_...%s]",
             $self->{wtWebioAn8GraphPortName},
             defined $alarm->{wtWebioAn8GraphAlarmMin} ? $alarm->{wtWebioAn8GraphAlarmMin} : "-",
             $self->{wtWebioAn8GraphBinaryTempValue},
@@ -197,8 +149,8 @@ sub check {
   }
 }
 
-package WuT::WebioAn8Graph::SensorSubsystem::Alarm;
-our @ISA = qw(GLPlugin::TableItem);
+package Classes::WebioAn8Graph::SensorSubsystem::Alarm;
+our @ISA = qw(GLPlugin::SNMP::TableItem);
 
 sub belongs_to {
   my $self = shift;
@@ -228,12 +180,11 @@ sub belongs_to {
   }
 }
 
-package WuT::WebioAn8Graph::SensorSubsystem::AlarmIf;
-our @ISA = qw(GLPlugin::TableItem);
+package Classes::WebioAn8Graph::SensorSubsystem::AlarmIf;
+our @ISA = qw(GLPlugin::SNMP::TableItem);
 
 
-package WuT::WebioAn8Graph::SensorSubsystem::Port;
-our @ISA = qw(GLPlugin::TableItem);
-
+package Classes::WebioAn8Graph::SensorSubsystem::Port;
+our @ISA = qw(GLPlugin::SNMP::TableItem);
 
 
