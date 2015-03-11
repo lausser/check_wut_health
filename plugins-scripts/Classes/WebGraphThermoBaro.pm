@@ -168,7 +168,11 @@ sub belongs_to {
   my $self = shift;
   my $trigger = $self->{wtWebGraphThermoBaroAlarmTrigger};
   if ($trigger !~ /^0x/) {
-    $trigger = "0x ".$trigger;
+    if ($trigger !~ /^[0-9a-zA-Z ]+/) {
+      $trigger = "0x".unpack("H*", $trigger);
+    } else {
+      $trigger = "0x".$trigger;
+    }
   }
   $trigger =~ s/\s//g;
   if (oct($trigger) & oct("0b00000000000000000000000000000001")) {
