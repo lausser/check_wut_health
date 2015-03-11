@@ -2,6 +2,9 @@
 # Changelog of the check_wut_health plugin #
 ############################################
 
+2015-03-10 1.1.1.2
+- fix a bug in graphthermobaro alert-sensor-relationship
+
 2015-01-26 1.1.1.1
 - update GLPlugin[SNMP]
 

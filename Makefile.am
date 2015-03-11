@@ -3,4 +3,5 @@
 SUBDIRS = plugins-scripts
 
 dist-hook:
+	find $(distdir) -type f -exec dos2unix {} \;
 	make 
