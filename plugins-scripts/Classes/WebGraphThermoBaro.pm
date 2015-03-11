@@ -166,19 +166,21 @@ sub finish {
     $self->{wtWebGraphThermoBaroAlarmMailText} =~ s/[[:cntrl:]]+//g;
     $self->{wtWebGraphThermoBaroAlarmMailText} =~ s/\|/ /g;
   }
+  if ($self->{wtWebGraphThermoBaroAlarmTrigger} !~ /^0x/) {
+    if ($self->{wtWebGraphThermoBaroAlarmTrigger} !~ /^[0-9a-zA-Z ]+/) {
+      $self->{wtWebGraphThermoBaroAlarmTrigger} =
+          "0x".unpack("H*", $self->{wtWebGraphThermoBaroAlarmTrigger});
+    } else {
+      $self->{wtWebGraphThermoBaroAlarmTrigger} =
+          "0x".$self->{wtWebGraphThermoBaroAlarmTrigger};
+    }
+  }
+  $self->{wtWebGraphThermoBaroAlarmTrigger} =~ s/\s//g;
 }
 
 sub belongs_to {
   my $self = shift;
   my $trigger = $self->{wtWebGraphThermoBaroAlarmTrigger};
-  if ($trigger !~ /^0x/) {
-    if ($trigger !~ /^[0-9a-zA-Z ]+/) {
-      $trigger = "0x".unpack("H*", $trigger);
-    } else {
-      $trigger = "0x".$trigger;
-    }
-  }
-  $trigger =~ s/\s//g;
   if (oct($trigger) & oct("0b00000000000000000000000000000001")) {
     return 1;
   } elsif (oct($trigger) & oct("0b00000000000000000000000000000010")) {
