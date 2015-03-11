@@ -107,12 +107,6 @@ sub check {
       if ($self->check_thresholds(
           metric => $self->{label}."_".$self->{wtWebGraphThermoBaroPortName},
           value => $self->{wtWebGraphThermoBaroBinaryTempValue})) {
-        if ($alarm->{wtWebGraphThermoBaroAlarmMailText} =~ /^0x(.*)/) {
-          $alarm->{wtWebGraphThermoBaroAlarmMailText} = $1;
-          $alarm->{wtWebGraphThermoBaroAlarmMailText} =~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
-          $alarm->{wtWebGraphThermoBaroAlarmMailText} =~ s/[[:cntrl:]]+//g;
-          $alarm->{wtWebGraphThermoBaroAlarmMailText} =~ s/\|/ /g;
-        }
         $self->add_message($self->check_thresholds(
           metric => $self->{label}."_".$self->{wtWebGraphThermoBaroPortName},
           value => $self->{wtWebGraphThermoBaroBinaryTempValue}),
@@ -163,6 +157,16 @@ sub check {
 
 package Classes::WebGraphThermoBaro::SensorSubsystem::Alarm;
 our @ISA = qw(GLPlugin::SNMP::TableItem);
+
+sub finish {
+  my $self = shift;
+  if ($self->{wtWebGraphThermoBaroAlarmMailText} =~ /^0x(.*)/) {
+    $self->{wtWebGraphThermoBaroAlarmMailText} = $1;
+    $self->{wtWebGraphThermoBaroAlarmMailText} =~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
+    $self->{wtWebGraphThermoBaroAlarmMailText} =~ s/[[:cntrl:]]+//g;
+    $self->{wtWebGraphThermoBaroAlarmMailText} =~ s/\|/ /g;
+  }
+}
 
 sub belongs_to {
   my $self = shift;

@@ -4,6 +4,7 @@
 
 2015-03-10 1.1.1.2
 - fix a bug in graphthermobaro alert-sensor-relationship
+- make alert text readable in debug output
 
 2015-01-26 1.1.1.1
 - update GLPlugin[SNMP]
