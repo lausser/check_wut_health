@@ -15,7 +15,7 @@ sub init {
 
 
 package Classes::WebGraphThermoBaro::DiagSubsystem;
-our @ISA = qw(GLPlugin::SNMP::Item);
+our @ISA = qw(Monitoring::GLPlugin::SNMP::Item);
 use strict;
 
 sub init {
@@ -37,12 +37,12 @@ sub check {
 }
 
 package Classes::WebGraphThermoBaro::SensorSubsystem;
-our @ISA = qw(GLPlugin::SNMP::Item);
+our @ISA = qw(Monitoring::GLPlugin::SNMP::Item);
 use strict;
 
 sub init {
   my $self = shift;
-  $GLPlugin::SNMP::session->translate([
+  $Monitoring::GLPlugin::SNMP::session->translate([
     '-octetstring' => 0x1,
     # force wtWebGraphThermoBaroAlarmTrigger in a 0xstring format
   ]);
@@ -82,7 +82,7 @@ sub init {
 
 
 package Classes::WebGraphThermoBaro::SensorSubsystem::Sensor;
-our @ISA = qw(GLPlugin::SNMP::TableItem);
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
 
 sub rebless {
@@ -156,7 +156,7 @@ sub check {
 }
 
 package Classes::WebGraphThermoBaro::SensorSubsystem::Alarm;
-our @ISA = qw(GLPlugin::SNMP::TableItem);
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 
 sub finish {
   my $self = shift;
@@ -203,11 +203,11 @@ sub belongs_to {
 }
 
 package Classes::WebGraphThermoBaro::SensorSubsystem::AlarmIf;
-our @ISA = qw(GLPlugin::SNMP::TableItem);
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 
 
 package Classes::WebGraphThermoBaro::SensorSubsystem::Port;
-our @ISA = qw(GLPlugin::SNMP::TableItem);
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 
 
 package Classes::WebGraphThermoBaro::SensorSubsystem::Sensor::Temperature;

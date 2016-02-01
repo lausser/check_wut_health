@@ -1,13 +1,21 @@
-$GLPlugin::SNMP::discover_ids = {
+{
+  no warnings qw(once);
+  $Monitoring::GLPlugin::SNMP::discover_ids = {};
+  $Monitoring::GLPlugin::SNMP::mib_ids = {};
+  $Monitoring::GLPlugin::SNMP::mibs_and_oids = {};
+  $Monitoring::GLPlugin::SNMP::definitions = {};
+}
+
+$Monitoring::GLPlugin::SNMP::discover_ids = {
   '1.3.6.1.4.1.4555.1.1.1' => 'UPS::Socomec::Netvision',
 };
 
-$GLPlugin::SNMP::mib_ids = {
+$Monitoring::GLPlugin::SNMP::mib_ids = {
   'WebGraph-8xThermometer-MIB' => '1.3.6.1.4.1.5040.1.2.6',
   'WebGraph-Thermo-Hygro-Barometer-MIB' => '1.3.6.1.4.1.5040.1.2.16',
 };
 
-$GLPlugin::SNMP::mibs_and_oids = {
+$Monitoring::GLPlugin::SNMP::mibs_and_oids = {
   'MIB-II' => {
     sysDescr => '1.3.6.1.2.1.1.1',
     sysObjectID => '1.3.6.1.2.1.1.2',

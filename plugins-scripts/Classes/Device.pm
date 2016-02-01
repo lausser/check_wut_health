@@ -1,5 +1,5 @@
 package Classes::Device;
-our @ISA = qw(GLPlugin::SNMP);
+our @ISA = qw(Monitoring::GLPlugin::SNMP);
 use strict;
 
 sub classify {
@@ -20,6 +20,9 @@ sub classify {
       } elsif ($self->implements_mib('WebGraph-Thermo-Hygro-Barometer-MIB')) {
         bless $self, 'Classes::WebGraphThermoBaro';
         $self->debug('using Classes::WebGraphThermoBaro');
+      } elsif ($self->implements_mib('HWg-WLD-MIB')) {
+        bless $self, 'Classes::HWG::WLD';
+        $self->debug('using Classes::HWG::WLD');
       } else {
         if (my $class = $self->discover_suitable_class()) {
           bless $self, $class;
@@ -43,7 +46,7 @@ sub init {
   my $self = shift;
   if ($self->mode =~ /something specific/) {
   } else {
-    bless $self, 'GLPlugin::SNMP';
+    bless $self, 'Monitoring::GLPlugin::SNMP';
     $self->no_such_mode();
   }
 }
