@@ -42,7 +42,7 @@ use strict;
 
 sub init {
   my $self = shift;
-  $Monitoring::GLPlugin::SNMP::session->translate([
+  $self->session_translate([
     '-octetstring' => 0x1,
     # force wtWebioAn8GraphAlarmTrigger in a 0xstring format
   ]);
