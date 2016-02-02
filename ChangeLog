@@ -1,3 +1,6 @@
+* 2016-02-02 2.0
+  add HWG Water Leak Detector
+  use GLPlugin autoload mibs
 * 2015-07-13 1.2
   new directory layout, standalone
 * 2015-04-23 1.1.1.3
