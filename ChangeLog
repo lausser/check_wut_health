@@ -1,3 +1,5 @@
+* 2016-02-08 2.1
+  add glplugin submodule
 * 2016-02-02 2.0
   add HWG Water Leak Detector
   use GLPlugin autoload mibs
