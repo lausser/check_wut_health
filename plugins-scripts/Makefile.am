@@ -11,15 +11,19 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/TableItem.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/MIB2MIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/EMDMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/HWGWLDMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/SNMPFRAMEWORKMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/STULZWIB8000MIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/WEBGRAPH8XTHERMOMETERMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/WEBGRAPHTHERMOHYGROBAROMETERMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/HWGWLDMIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/WEBGRAPHTHERMOHYGROBAROMETERMIB.pm
 EXTRA_MODULES=\
   Classes/WebGraphThermoBaro.pm \
   Classes/WebioAn8Graph.pm \
   Classes/MibsAndOids.pm \
   Classes/HWG.pm \
+  Classes/Raritan.pm \
+  Classes/Raritan/EMD.pm \
   Classes/Device.pm
 
 SED=/bin/sed
