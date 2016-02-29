@@ -24,6 +24,8 @@ EXTRA_MODULES=\
   Classes/HWG.pm \
   Classes/Raritan.pm \
   Classes/Raritan/EMD.pm \
+  Classes/Stulz.pm \
+  Classes/Stulz/WIB8000.pm \
   Classes/Device.pm
 
 SED=/bin/sed
