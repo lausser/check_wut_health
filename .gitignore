@@ -1,0 +1,14 @@
+Makefile.in
+aclocal.m4
+autom4te.cache/
+check_wut_health-*.tar.gz
+configure
+mibs/
+new/
+plugins-scripts/Makefile.in
+testdevices
+Makefile
+config.log
+config.status
+plugins-scripts/Makefile
+plugins-scripts/subst
