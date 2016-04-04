@@ -119,9 +119,14 @@ sub check {
   my $self = shift;
   $self->add_info(sprintf 'humidity %s is %.2fC',
       $self->{name}, $self->{unitReturnAirTemperature});
-  $self->set_thresholds(metric => $self->{name}, warning => '40:60', critical => '35:65');
-  $self->add_message($self->check_thresholds(metric => $self->{name}, value => $self->{unitReturnAirHumidity}));
-  $self->add_perfdata_....
+  my $metric = 'hum_'.$self->{name};
+  $self->set_thresholds(metric => $metric, warning => '40:60', critical => '35:65');
+  $self->add_message($self->check_thresholds(metric => $metric, value => $self->{unitReturnAirHumidity}));
+  $self->add_perfdata(
+      label => $metric,
+      value => $self->{unitReturnAirHumidity},
+      uom => '%',
+  );
 }
 
 package Classes::Stulz::WIB8000::Component::SensorSubsystem::Temperature;
@@ -133,7 +138,7 @@ sub finish {
   my $self = shift;
   foreach (qw(unitAirTemperature unitEmergencyTemperature
       unitSetpointAirTratureCorrected unitReturnAirTemperature
-      unitSupplyAirTemperature)) {
+      unitSupplyAirTemperature unitOutsideAirTemperature)) {
     if (exists $self->{$_}) {
       $self->{$_} /= 10;
     }
@@ -144,8 +149,13 @@ sub check {
   my $self = shift;
   $self->add_info(sprintf 'return air temperature %s is %.2fC',
       $self->{name}, $self->{unitReturnAirTemperature});
-  $self->set_thresholds(metric => $self->{name}, warning => 25, critical => 28);
-  $self->add_message($self->check_thresholds(metric => $self->{name}, value => $self->{unitReturnAirTemperature}));
+  my $metric = 'temp_'.$self->{name};
+  $self->set_thresholds(metric => $metric, warning => 25, critical => 28);
+  $self->add_message($self->check_thresholds(metric => $metric, value => $self->{unitReturnAirTemperature}));
+  $self->add_perfdata(
+      label => $metric,
+      value => $self->{unitReturnAirTemperature},
+  );
 }
 
 package Classes::Stulz::WIB8000::Component::SensorSubsystem::Pressure;
