@@ -1,3 +1,7 @@
+* 2016-04-22 2.3.1.2
+  bugfix in stulz wib8000 humidity output
+* 2016-04-14 2.3.1.1
+  reduce stulz snmp queries to a minimum
 * 2016-04-04 2.3.1
   add stulz perfdata for hum & temp
 * 2016-03-30 2.3

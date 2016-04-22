@@ -5,6 +5,7 @@ use strict;
 sub init {
   my $self = shift;
   if ($self->mode =~ /device::sensor::status/) {
+    $Monitoring::GLPlugin::SNMP::session->timeout(60);
     $self->analyze_and_check_sensor_subsystem("Classes::Stulz::WIB8000::Component::SensorSubsystem");
   } else {
     $self->no_such_mode();
@@ -21,22 +22,22 @@ sub init {
       wibFirmware wibsettingAuxInLow wibsettingAuxInHigh wibsettingAuxInState
   ));
   $self->get_snmp_tables("STULZ-WIB8000", [
-      ["wibindexes", "wibIndexTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::WibIndex"],
-      ["alarmmails", "alarmMailTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::AlarmMail"],
-      ["units", "unitTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Unit"],
-      ["unitstates", "unitstateTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitState"],
-      ["states", "StateTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::State"],
-      ["logunits", "logUnitTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::LogUnit"],
-      ["humidities", "infoValHumidityTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Humidity"],
-      ["temperatures", "infoValTemperatureTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Temperature"],
-      ["pressures", "infoValPressureTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Pressure"],
-      ["waters", "infoValWaterTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Water"],
+      #["wibindexes", "wibIndexTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::WibIndex"],
+      #["alarmmails", "alarmMailTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::AlarmMail"],
+      ["units", "unitTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Unit", undef, ["unitsettingName", "unitsettingHwType", "unitsettingHasFailure"]],
+      #["unitstates", "unitstateTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitState"],
+      #["states", "StateTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::State"],
+      #["logunits", "logUnitTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::LogUnit"],
+      ["humidities", "infoValHumidityTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Humidity", undef, [qw(unitReturnAirHumidity)]],
+      ["temperatures", "infoValTemperatureTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Temperature", undef, [qw(unitReturnAirTemperature)]],
+      #["pressures", "infoValPressureTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Pressure"],
+      #["waters", "infoValWaterTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Water"],
       #["refrigerants", "infoValRefrigerantTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Info"],
       #["aecontrols", "infoValAEcontrolTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Info"],
       #["miscs", "infoValMiscellaneousTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Info"],
       #["modulefuncs", "infoModulefunctionsComponenTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Info"],
       #["coolings", "infoCoolingTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Info"],
-      ["compressors", "infoCompressorTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Compressor"],
+      #["compressors", "infoCompressorTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Compressor"],
       #["valves", "infoValvesTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Valve"],
       #["suctionvalves", "infoSuctionvalvesTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Info"],
   ]);
@@ -107,8 +108,7 @@ use strict;
 
 sub finish {
   my $self = shift;
-  foreach (qw(unitHumidity unitSetpointHumidityCorrected unitReturnAirHumidity
-      unitSupplyAirHumidity fCBRoomAirHumidity fCBOutsideAirHumidity)) {
+  foreach (qw(unitReturnAirHumidity)) {
     if (exists $self->{$_}) {
       $self->{$_} /= 10;
     }
@@ -117,8 +117,8 @@ sub finish {
 
 sub check {
   my $self = shift;
-  $self->add_info(sprintf 'humidity %s is %.2fC',
-      $self->{name}, $self->{unitReturnAirTemperature});
+  $self->add_info(sprintf 'humidity %s is %.2f%%',
+      $self->{name}, $self->{unitReturnAirHumidity});
   my $metric = 'hum_'.$self->{name};
   $self->set_thresholds(metric => $metric, warning => '40:60', critical => '35:65');
   $self->add_message($self->check_thresholds(metric => $metric, value => $self->{unitReturnAirHumidity}));
@@ -136,9 +136,7 @@ use strict;
 
 sub finish {
   my $self = shift;
-  foreach (qw(unitAirTemperature unitEmergencyTemperature
-      unitSetpointAirTratureCorrected unitReturnAirTemperature
-      unitSupplyAirTemperature unitOutsideAirTemperature)) {
+  foreach (qw(unitReturnAirTemperature)) {
     if (exists $self->{$_}) {
       $self->{$_} /= 10;
     }
