@@ -1,3 +1,5 @@
+* 2016-05-19 2.3.2
+  count stulz wib8000 number of active units via x-threshold num_on_units
 * 2016-04-22 2.3.1.2
   bugfix in stulz wib8000 humidity output
 * 2016-04-14 2.3.1.1

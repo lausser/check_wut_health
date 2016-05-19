@@ -5,7 +5,7 @@ use strict;
 sub init {
   my $self = shift;
   if ($self->mode =~ /device::sensor::status/) {
-    $Monitoring::GLPlugin::SNMP::session->timeout(60);
+    $Monitoring::GLPlugin::SNMP::session->timeout(60) if $Monitoring::GLPlugin::SNMP::session;
     $self->analyze_and_check_sensor_subsystem("Classes::Stulz::WIB8000::Component::SensorSubsystem");
   } else {
     $self->no_such_mode();
@@ -25,6 +25,7 @@ sub init {
       #["wibindexes", "wibIndexTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::WibIndex"],
       #["alarmmails", "alarmMailTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::AlarmMail"],
       ["units", "unitTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Unit", undef, ["unitsettingName", "unitsettingHwType", "unitsettingHasFailure"]],
+      ["unitoverview", "overviewTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitOverview"],
       #["unitstates", "unitstateTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitState"],
       #["states", "StateTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::State"],
       #["logunits", "logUnitTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::LogUnit"],
@@ -57,6 +58,29 @@ sub init {
   }
   delete $self->{temperatures};
   delete $self->{humidities};
+  $self->{num_units} = scalar(@{$self->{unitoverview}});
+  $self->{num_on_units} = scalar(grep { $_->{unitOnOff} eq "on" } @{$self->{unitoverview}});
+  if ($self->opts->warningx || $self->opts->criticalx) {
+    my $warningx = $self->opts->warningx;
+    my $criticalx = $self->opts->criticalx;
+    if (exists $warningx->{num_on_units} || exists $criticalx->{num_on_units}) {
+      $self->set_thresholds(
+          metric => 'num_on_units',
+          warning => $warningx->{num_on_units},
+          critical => $criticalx->{num_on_units},
+      );
+      $self->add_message(
+          $self->check_thresholds(metric => 'num_on_units', value => $self->{num_on_units}),
+          sprintf "%d of %d units are on", $self->{num_on_units}, $self->{num_units}
+      );
+      $self->add_perfdata(
+          label => 'num_on_units',
+          value => $self->{num_on_units},
+          warning => $warningx->{num_on_units},
+          critical => $criticalx->{num_on_units},
+      );
+    }
+  }
 }
 
 package Classes::Stulz::WIB8000::Component::SensorSubsystem::WibIndex;
@@ -68,6 +92,10 @@ our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
 
 package Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitState;
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
+use strict;
+
+package Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitOverview;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
 
