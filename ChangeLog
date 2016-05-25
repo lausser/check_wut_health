@@ -1,3 +1,5 @@
+* 2016-05-25 2.3.2.1
+  even less snmp queries for stulz wib8000. These devices easily crash
 * 2016-05-19 2.3.2
   count stulz wib8000 number of active units via x-threshold num_on_units
 * 2016-04-22 2.3.1.2

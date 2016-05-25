@@ -25,7 +25,7 @@ sub init {
       #["wibindexes", "wibIndexTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::WibIndex"],
       #["alarmmails", "alarmMailTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::AlarmMail"],
       ["units", "unitTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Unit", undef, ["unitsettingName", "unitsettingHwType", "unitsettingHasFailure"]],
-      ["unitoverview", "overviewTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitOverview"],
+      ["unitoverview", "overviewTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitOverview", undef, ["unitOnOff"]],
       #["unitstates", "unitstateTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitState"],
       #["states", "StateTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::State"],
       #["logunits", "logUnitTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::LogUnit"],
