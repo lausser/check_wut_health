@@ -1,3 +1,5 @@
+* 2016-05-30 2.3.3
+  update GLPlugin, so customer Lidl can use regex as threholds
 * 2016-05-25 2.3.2.1
   even less snmp queries for stulz wib8000. These devices easily crash
 * 2016-05-19 2.3.2
