@@ -20,6 +20,9 @@ sub classify {
       } elsif ($self->implements_mib('WebGraph-Thermo-Hygro-Barometer-MIB')) {
         bless $self, 'Classes::WebGraphThermoBaro';
         $self->debug('using Classes::WebGraphThermoBaro');
+      } elsif ($self->implements_mib('WebGraph-Thermo-Hygro-Barometer-US-MIB')) {
+        bless $self, 'Classes::WebGraphThermoBaroUS';
+        $self->debug('using Classes::WebGraphThermoBaroUS');
       } elsif ($self->implements_mib('HWg-WLD-MIB')) {
         bless $self, 'Classes::HWG::WLD';
         $self->debug('using Classes::HWG::WLD');
