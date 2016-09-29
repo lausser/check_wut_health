@@ -1,3 +1,5 @@
+* 2016-09-29 2.3.4
+  add Web-Thermo-Hygrobarometer with .enterprise.5040 identifying itself as Control temperatura y humedad CPD
 * 2016-08-12 2.3.3.1
   update GLPlugin/Extraopts
 * 2016-05-30 2.3.3
