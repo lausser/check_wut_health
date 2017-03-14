@@ -35,6 +35,9 @@ sub classify {
       } elsif ($self->implements_mib('LIEBERT-GP-ENVIRONMENTAL-MIB')) {
         bless $self, 'Classes::Liebert';
         $self->debug('using Classes::Liebert');
+      } elsif ($self->implements_mib('THE_V01-MIB')) {
+        bless $self, 'Classes::Papouch';
+        $self->debug('using Classes::Papouch');
       } else {
         if (my $class = $self->discover_suitable_class()) {
           bless $self, $class;

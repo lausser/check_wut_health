@@ -7,6 +7,7 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/Item.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/TableItem.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/SysDescPrettify.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/CSF.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/Item.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/TableItem.pm \
@@ -24,7 +25,8 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LIEBERTGPFLEXIBLEMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LIEBERTGPPOWERMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LIEBERTGPREGISTRATIONMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LIEBERTGPSYSTEMMIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LIEBERTGPSYSTEMMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/THEV01MIB.pm
 EXTRA_MODULES=\
   Classes/WebGraphThermoBaro.pm \
   Classes/WebGraphThermoBaroUS.pm \
@@ -38,6 +40,7 @@ EXTRA_MODULES=\
   Classes/Liebert/Component/EnvironmentalSubsystem.pm \
   Classes/Liebert/Component/SensorSubsystem.pm \
   Classes/Liebert.pm \
+  Classes/Papouch.pm \
   Classes/Device.pm
 
 SED=/bin/sed
