@@ -20,7 +20,7 @@ our @ISA = qw(Classes::Device);
 use strict;
 
 sub init {
-  my $self = shift;
+  my ($self) = @_;
   if ($self->mode =~ /device::sensor::status/) {
     $self->analyze_and_check_sensor_subsystem("Classes::Papouch::TH2E::Component::SensorSubsystem");
   } else {
@@ -33,33 +33,63 @@ our @ISA = qw(Monitoring::GLPlugin::SNMP::Item);
 use strict;
 
 sub init {
-  my $self = shift;
+  my ($self) = @_;
+  $self->get_snmp_objects("THE_V01-MIB", qw(
+    deviceName psAlarmString
+  ));
   $self->get_snmp_tables("THE_V01-MIB", [
       ["channels", "channelTable", "Classes::Papouch::TH2E::Component::SensorSubsystem::Channel"],
       ["values", "watchValTable", "Classes::Papouch::TH2E::Component::SensorSubsystem::Value"],
   ]);
+  $self->merge_tables("channels", "values");
+}
+
+sub check {
+  my ($self) = @_;
+  $self->SUPER::check();
+  if ($self->{psAlarmString}) {
+    $self->add_ok($self->{psAlarmString});
+  }
 }
 
 package Classes::Papouch::TH2E::Component::SensorSubsystem::Channel;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
 
+sub finish {
+  my ($self) = @_;
+  $self->{inChValue} /= 10;
+}
+
+sub check {
+  my ($self) = @_;
+  my $name = 'channel_'.$self->{flat_indices};
+  if ($self->{modeWatch} eq 'active') {
+    $self->add_info(sprintf '%s value is %.2f%s, status is %s',
+        $name, $self->{inChValue}, $self->{inChUnits}, $self->{inChStatus}
+    );
+    $self->set_thresholds(metric => $name,
+        warning => $self->{limitLo}.':'.$self->{limitHi},
+        critical => $self->{limitLo}.':'.$self->{limitHi},
+    );
+    $self->add_message($self->check_thresholds(metric => $name,
+        value => $self->{inChValue}
+    ));
+    $self->add_perfdata(label => $name,
+        value => $self->{inChValue},
+        uom => $self->{inChUnits} eq 'percent' ? '%' : '',
+    );
+  }
+}
+
 package Classes::Papouch::TH2E::Component::SensorSubsystem::Value;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
 
-sub xcheck {
-  my $self = shift;
-  $self->add_info(sprintf "%s has state %s (%s)",
-      $self->{wldName}, $self->{wldState}, $self->{wldValue});
-  if ($self->{wldState} eq "invalid") {
-    $self->add_unknown();
-  } elsif ($self->{wldState} eq "alarm") {
-    $self->add_critical();
-  } else {
-    $self->add_ok();
-  }
+sub finish {
+  my ($self) = @_;
+  $self->{limitHi} /= 10;
+  $self->{limitLo} /= 10;
 }
-
 
 
