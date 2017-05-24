@@ -155,8 +155,8 @@ our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 sub belongs_to {
   my $self = shift;
   my $trigger = $self->{wtWebioAn8GraphAlarmTrigger};
-  if ($trigger !~ /^0x/) {
-    $trigger = "0x ".$trigger;
+  if (unpack('H*', $trigger) !~ /^0x/ && unpack('H*', $trigger) =~ /^[\da-zA-Z]+$/) {
+    $trigger = "0x ".unpack('H*', $trigger);
   }
   $trigger =~ s/\s//g;
   if (oct($trigger) & oct("0b00000000000000000000000000000001")) {

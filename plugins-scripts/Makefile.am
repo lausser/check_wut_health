@@ -31,7 +31,6 @@ EXTRA_MODULES=\
   Classes/WebGraphThermoBaro.pm \
   Classes/WebGraphThermoBaroUS.pm \
   Classes/WebioAn8Graph.pm \
-  Classes/MibsAndOids.pm \
   Classes/HWG.pm \
   Classes/Raritan.pm \
   Classes/Raritan/EMD.pm \
