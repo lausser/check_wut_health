@@ -21,7 +21,7 @@ use strict;
 sub init {
   my $self = shift;
   $self->get_snmp_objects("WebGraph-8xThermometer-MIB", 
-      qw(wtWebioAn8GraphDiagErrorCount wtWebioAn8GraphDiagErrorMessage));
+      qw(wtWebioAn8GraphDiagErrorCount wtWebioAn8GraphDiagErrorMessage wtWebioAn8GraphAlarmCount));
 }
 
 sub check {
@@ -63,8 +63,9 @@ sub init {
     $sensor->{wtWebioAn8GraphBinaryTempValue} /= 10;
     $sensor->{alarms} = [];
     foreach my $alarm (@{$self->{alarms}}) {
-      if ($alarm->belongs_to() eq $sensor->{flat_indices}) {
-        push(@{$sensor->{alarms}}, $alarm);
+      if ($alarm->belongs_to($sensor->{flat_indices})) {
+        push(@{$sensor->{alarms}}, $alarm) if
+            $alarm->{wtWebioAn8GraphAlarmType} !~ /Sensor lost/;
       }
     }
     foreach my $port (@{$self->{ports}}) {
@@ -152,29 +153,55 @@ sub check {
 package Classes::WebioAn8Graph::SensorSubsystem::Alarm;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 
-sub belongs_to {
-  my $self = shift;
+sub finish {
+  my ($self) = @_;
   my $trigger = $self->{wtWebioAn8GraphAlarmTrigger};
-  if (unpack('H*', $trigger) !~ /^0x/ && unpack('H*', $trigger) =~ /^[\da-zA-Z]+$/) {
-    $trigger = "0x ".unpack('H*', $trigger);
+  if ($trigger =~ /^0x/ && $trigger =~ /^[\da-zA-Z]+$/) {
+  } elsif (unpack('H*', $trigger) !~ /^0x/ && unpack('H*', $trigger) =~ /^[\da-z
+A-Z]+$/) {
+    $trigger = "0x".unpack('H*', $trigger);
   }
   $trigger =~ s/\s//g;
-  if (oct($trigger) & oct("0b00000000000000000000000000000001")) {
+  my $type = '';
+  $type .= 'Timer_'
+      if (oct($trigger) & oct("0b00000000000000000000000100000000"));
+  $type .= 'ColdStart_'
+      if (oct($trigger) & oct("0b00000000000000000000001000000000"));
+  $type .= 'WarmStart_'
+      if (oct($trigger) & oct("0b00000000000000000000010000000000"));
+  $type .= 'Sensor lost_'
+      if (oct($trigger) & oct("0b00000000000000000000100000000000"));
+  $self->{wtWebioAn8GraphAlarmType} = $type;
+}
+
+sub belongs_to {
+  my ($self, $sensor) = @_;
+  my $trigger = $self->{wtWebioAn8GraphAlarmTrigger};
+  if ($trigger =~ /^0x/ && $trigger =~ /^[\da-zA-Z]+$/) {
+  } elsif (unpack('H*', $trigger) !~ /^0x/ && unpack('H*', $trigger) =~ /^[\da-z
+A-Z]+$/) {
+    $trigger = "0x".unpack('H*', $trigger);
+  }
+  $trigger =~ s/\s//g;
+  my @sensors = ();
+  push(@sensors, 1)
+      if (oct($trigger) & oct("0b00000000000000000000000000000001"));
+  push(@sensors, 2)
+      if (oct($trigger) & oct("0b00000000000000000000000000000010"));
+  push(@sensors, 3)
+      if (oct($trigger) & oct("0b00000000000000000000000000000100"));
+  push(@sensors, 4)
+      if (oct($trigger) & oct("0b00000000000000000000000000001000"));
+  push(@sensors, 5)
+      if (oct($trigger) & oct("0b00000000000000000000000000010000"));
+  push(@sensors, 6)
+      if (oct($trigger) & oct("0b00000000000000000000000000100000"));
+  push(@sensors, 7)
+      if (oct($trigger) & oct("0b00000000000000000000000001000000"));
+  push(@sensors, 8)
+      if (oct($trigger) & oct("0b00000000000000000000000010000000"));
+  if (grep { $sensor == $_ } @sensors) {
     return 1;
-  } elsif (oct($trigger) & oct("0b00000000000000000000000000000010")) {
-    return 2;
-  } elsif (oct($trigger) & oct("0b00000000000000000000000000000100")) {
-    return 3;
-  } elsif (oct($trigger) & oct("0b00000000000000000000000000001000")) {
-    return 4;
-  } elsif (oct($trigger) & oct("0b00000000000000000000000000010000")) {
-    return 5;
-  } elsif (oct($trigger) & oct("0b00000000000000000000000000100000")) {
-    return 6;
-  } elsif (oct($trigger) & oct("0b00000000000000000000000001000000")) {
-    return 7;
-  } elsif (oct($trigger) & oct("0b00000000000000000000000010000000")) {
-    return 8;
   } else {
     return 0;
   }
