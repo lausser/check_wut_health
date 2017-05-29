@@ -116,11 +116,10 @@ sub check {
             defined $alarm->{wtWebioAn8GraphAlarmMax} ? $alarm->{wtWebioAn8GraphAlarmMax} : "-",
             $alarm->{wtWebioAn8GraphAlarmMailText});
       } else {
-        $self->add_ok(sprintf "temperature %s is in range: [%s..._%s_...%s]",
+        $self->add_ok(sprintf "%s temperature is %sC",
             $self->{wtWebioAn8GraphPortName},
-            defined $alarm->{wtWebioAn8GraphAlarmMin} ? $alarm->{wtWebioAn8GraphAlarmMin} : "-",
             $self->{wtWebioAn8GraphBinaryTempValue},
-            defined $alarm->{wtWebioAn8GraphAlarmMax} ? $alarm->{wtWebioAn8GraphAlarmMax} : "-");
+        );
       }
       $self->add_perfdata(
           label => "temp_".$self->{wtWebioAn8GraphPortName},
@@ -138,7 +137,7 @@ sub check {
         critical => undef);
     $self->add_message($self->check_thresholds(
           metric => "temp_".$self->{wtWebioAn8GraphPortName},
-          value => $self->{wtWebioAn8GraphBinaryTempValue}), sprintf "temperature %s is %s",
+          value => $self->{wtWebioAn8GraphBinaryTempValue}), sprintf "temperature %s is %sC",
         $self->{wtWebioAn8GraphPortName},
         $self->{wtWebioAn8GraphBinaryTempValue});
     $self->add_perfdata(

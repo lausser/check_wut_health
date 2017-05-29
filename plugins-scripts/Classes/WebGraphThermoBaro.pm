@@ -118,12 +118,12 @@ sub check {
             defined $alarm->{wtWebGraphThermoBaroAlarmMax} ? $alarm->{wtWebGraphThermoBaroAlarmMax} : "-",
             $alarm->{wtWebGraphThermoBaroAlarmMailText});
       } else {
-        $self->add_ok(sprintf "%s %s is in range: [%s..._%s_...%s]",
-            $self->{label},
+        $self->add_ok(sprintf "%s %s is %s%s",
             $self->{wtWebGraphThermoBaroPortName},
-            defined $alarm->{wtWebGraphThermoBaroAlarmMin} ? $alarm->{wtWebGraphThermoBaroAlarmMin} : "-",
+            $self->{label},
             $self->{wtWebGraphThermoBaroBinaryTempValue},
-            defined $alarm->{wtWebGraphThermoBaroAlarmMax} ? $alarm->{wtWebGraphThermoBaroAlarmMax} : "-");
+            $self->{units},
+        );
       }
       $self->add_perfdata(
           label => $self->{label}."_".$self->{wtWebGraphThermoBaroPortName},

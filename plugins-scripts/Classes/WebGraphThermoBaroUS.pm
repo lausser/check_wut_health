@@ -127,12 +127,12 @@ sub check {
             defined $max ? $max : "-",
             $alarm->{wtWebGraphThermoBaroAlarmMailText});
       } else {
-        $self->add_ok(sprintf "%s %s is in range: [%s..._%s_...%s]",
-            $self->{label},
+        $self->add_ok(sprintf "%s %s is %s%s",
             $self->{wtWebGraphThermoBaroPortName},
-            defined $min ? $min : "-",
+            $self->{label},
             $self->{wtWebGraphThermoBaroBinaryTempValue},
-            defined $max ? $max : "-");
+            $self->{units},
+        );
       }
       $self->add_perfdata(
           label => $self->{label}."_".$self->{wtWebGraphThermoBaroPortName},
