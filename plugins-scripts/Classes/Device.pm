@@ -26,9 +26,9 @@ sub classify {
       } elsif ($self->implements_mib('HWg-WLD-MIB')) {
         bless $self, 'Classes::HWG::WLD';
         $self->debug('using Classes::HWG::WLD');
-      } elsif ($self->implements_mib('STULZ-WIB8000')) {
+      } elsif ($self->implements_mib('STULZ-WIB8000-MIB')) {
         bless $self, 'Classes::Stulz::WIB8000';
-        $self->debug('using Classes::Stulz::WIB8000');
+        $self->debug('using Classes::Stulz::WIB8000-MIB');
       } elsif ($self->implements_mib('EMD-MIB')) {
         bless $self, 'Classes::Raritan::EMD';
         $self->debug('using Classes::Raritan::EMD');

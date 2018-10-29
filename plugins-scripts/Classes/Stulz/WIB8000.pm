@@ -18,11 +18,12 @@ use strict;
 
 sub init {
   my $self = shift;
-  $self->get_snmp_objects("STULZ-WIB8000", qw(wibUnitname wibTempUnit
+  $self->get_snmp_objects("STULZ-WIB8000-MIB", qw(wibUnitname wibTempUnit
       wibFirmware wibsettingAuxInLow wibsettingAuxInHigh wibsettingAuxInState
   ));
-  $self->get_snmp_tables("STULZ-WIB8000", [
-      #["wibindexes", "wibIndexTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::WibIndex"],
+  $self->get_snmp_tables("STULZ-WIB8000-MIB", [
+      ["unitalarms", "unitAlarmsTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Alarm", undef, ["commonAlarm"]],
+     #["wibindexes", "wibIndexTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::WibIndex"],
       #["alarmmails", "alarmMailTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::AlarmMail"],
       ["units", "unitTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::Unit", undef, ["unitsettingName", "unitsettingHwType", "unitsettingHasFailure"]],
       ["unitoverview", "overviewTable", "Classes::Stulz::WIB8000::Component::SensorSubsystem::UnitOverview", undef, ["unitOnOff"]],
@@ -86,6 +87,22 @@ sub init {
 package Classes::Stulz::WIB8000::Component::SensorSubsystem::WibIndex;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
+
+package Classes::Stulz::WIB8000::Component::SensorSubsystem::Alarm;
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
+use strict;
+
+sub check {
+  my $self = shift;
+  $self->add_info(sprintf 'wib bus %s device %s module %s has %s alarm',
+      $self->{indices}->[0],
+      $self->{indices}->[1],
+      $self->{indices}->[2],
+      $self->{commonAlarm} ? 'an' : 'no');
+  if ($self->{commonAlarm}) {
+    $self->add_critical();
+  }
+}
 
 package Classes::Stulz::WIB8000::Component::SensorSubsystem::AlarmMail;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
