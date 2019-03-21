@@ -39,40 +39,10 @@ sub init {
     }
   }
   @{$self->{flexibles}} = grep { ! exists $_->{invalid} || $_->{invalid} != 1 } @{$self->{flexibles}};
-}
+  foreach (@{$self->{flexibles}}) {
+	  printf "%s %s %s\n",
+$_->{invalid} ? 1 : 0, $_->{lgpFlexibleEntryValue}, ref($_);
 
-sub xcheck {
-  my ($self) = @_;
-  $self->add_info(sprintf 'system state is %s', $self->{lgpSysState});
-  if ($self->{lgpSysState} eq 'startUp' ||
-      $self->{lgpSysState} eq 'normalOperation') {
-    $self->add_ok();
-  } elsif ($self->{lgpSysState} eq 'normalWithWarning') {
-    $self->add_warning();
-  } else {
-    $self->add_critical();
-  }
-  if (! $self->implements_mib('UPS-MIB')) {
-    $self->set_thresholds( metric => 'remaining_time', warning => '15:', critical => '10:');
-    if ($self->{lgpPwrSensorTimeRemaining} == 65535) {
-      $self->add_info(sprintf 'system is not capable of providing the remaining battery run time (but is not operating on battery now)');
-      $self->add_ok();
-    } else {
-      $self->add_info(sprintf 'remaining battery run time is %.2fmin', $self->{lgpPwrSensorTimeRemaining});
-      $self->add_message($self->check_thresholds(
-          value => $self->{lgpPwrSensorTimeRemaining}, metric => 'remaining_time')
-      );
-      $self->add_perfdata(
-          label => 'remaining_time',
-          value => $self->{lgpPwrSensorTimeRemaining},
-      );
-    }
-  }
-  $self->add_info(sprintf 'battery capacity status is %s', $self->{lgpPwrSensorCapacityStatus});
-  if ($self->{lgpPwrSensorCapacityStatus} eq 'batteryLow') {
-    $self->add_warning();
-  } elsif ($self->{lgpPwrSensorCapacityStatus} eq 'batteryDepleted') {
-    $self->add_critical();
   }
 }
 
@@ -103,7 +73,9 @@ use strict;
 
 sub finish {
   my ($self) = @_;
-  if ($self->{lgpFlexibleEntryValue} =~ /Event Control$/) {
+  if ($self->{lgpFlexibleEntryDataLabel} =~ /Status$/) {
+    bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Status';
+  } elsif ($self->{lgpFlexibleEntryValue} =~ /Event Control$/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::EventControl';
   } elsif ($self->{lgpFlexibleEntryValue} =~ /Event Type$/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::EventType';
@@ -120,20 +92,48 @@ sub finish {
   }
   if (ref($self) ne 'Classes::Liebert::Components::SensorSubsystem::Flexible') {
     $self->finish();
+  } else {
+    $self->{invalid} = 1;
   }
+  printf "%s\n", Data::Dumper::Dumper($self);
 }
 
 sub check {
   my ($self) = @_;
 }
 
+package Classes::Liebert::Components::SensorSubsystem::Flexible::Status;
+our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible);
+use strict;
+
+sub finish {
+  my ($self) = @_;
+}
+
+sub check {
+  my ($self) = @_;
+  $self->add_info(sprintf '%s is %s', $self->{lgpFlexibleEntryDataLabel}, $self->{lgpFlexibleEntryValue});
+  if ($self->{lgpFlexibleEntryValue} !~ /^(Normal Operation|OK)$/) {
+    $self->warning();
+  }
+}
+
+
 package Classes::Liebert::Components::SensorSubsystem::Flexible::EventType;
 our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible);
 use strict;
 
+sub finish {
+  my ($self) = @_;
+}
+
 package Classes::Liebert::Components::SensorSubsystem::Flexible::EventControl;
 our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible);
 use strict;
+
+sub finish {
+  my ($self) = @_;
+}
 
 package Classes::Liebert::Components::SensorSubsystem::Flexible::Event;
 our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible);

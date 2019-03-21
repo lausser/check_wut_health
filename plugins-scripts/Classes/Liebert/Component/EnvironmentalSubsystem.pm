@@ -45,13 +45,38 @@ sub finish {
       $self->{$_} /= 10;
     }
   }
+  if ($self->{lgpEnvHumidityDescrRel} =~ /^[\.\d]+$/) {
+    $self->{name} = $self->get_symbol(
+        "LIEBERT-GP-ENVIRONMENTAL-MIB",
+        $self->{lgpEnvHumidityDescrRel}
+    );
+  }
+  if ($self->{name}) {
+    $self->{name} =~ s/^lgpEnv//g;
+    $self->{name} =~ s/Humidity//g;
+    $self->{name} =~ s/(?:\b|(?<=([a-z])))([A-Z][a-z]+)/(defined($1) ? "_" : "") . lc($2)/eg;
+  } else {
+    $self->{name} = $self->{flat_indices};
+  }
+  $self->{name} = $self->{name};
 }
 
 sub check {
   my ($self) = @_;
   $self->add_info(sprintf 'humidity %s is %.2f%%',
-      $self->{flat_indices}, $self->{lgpEnvHumidityMeasurementRelTenths});
+      $self->{name}, $self->{lgpEnvHumidityMeasurementRelTenths});
   $self->add_ok();
+  my $thresholds = (defined $self->{lgpEnvHumidityLowThresholdRelTenths} ?
+      $self->{lgpEnvHumidityLowThresholdRelTenths}.":" : "").
+      (defined $self->{lgpEnvHumidityHighThresholdRelTenths} ?
+      $self->{lgpEnvHumidityHighThresholdRelTenths} : "");
+  $self->add_perfdata(
+      label => 'hum_'.$self->{name},
+      value => $self->{lgpEnvHumidityMeasurementRelTenths},
+      max => 100,
+      min => 0,
+      critical => $thresholds,
+  );
 }
 
 
@@ -69,11 +94,35 @@ sub finish {
       $self->{$_} /= 10;
     }
   }
+  if ($self->{lgpEnvTemperatureDescrDegC} =~ /^[\.\d]+$/) {
+    $self->{name} = $self->get_symbol(
+        "LIEBERT-GP-ENVIRONMENTAL-MIB",
+        $self->{lgpEnvTemperatureDescrDegC}
+    );
+  }
+  if ($self->{name}) {
+    $self->{name} =~ s/^lgpEnv//g;
+    $self->{name} =~ s/Temperature//g;
+    $self->{name} =~ s/(?:\b|(?<=([a-z])))([A-Z][a-z]+)/(defined($1) ? "_" : "") . lc($2)/eg;
+  } else {
+    $self->{name} = $self->{flat_indices};
+  }
+  $self->{name} = $self->{name};
 }
 
 sub check {
   my ($self) = @_;
   $self->add_info(sprintf 'temperature %s is %.2fC',
-      $self->{flat_indices}, $self->{lgpEnvTemperatureMeasurementTenthsDegC});
+      $self->{name}, $self->{lgpEnvTemperatureMeasurementTenthsDegC});
   $self->add_ok();
+  my $thresholds = (defined $self->{lgpEnvTemperatureLowThresholdTenthsDegC} ?
+      $self->{lgpEnvTemperatureLowThresholdTenthsDegC}.":" : "").
+      (defined $self->{lgpEnvTemperatureHighThresholdTenthsDegC} ?
+      $self->{lgpEnvTemperatureHighThresholdTenthsDegC} : "");
+  $self->add_perfdata(
+      label => 'temp_'.$self->{name},
+      value => $self->{lgpEnvTemperatureMeasurementTenthsDegC},
+      critical => $thresholds,
+  );
 }
+
