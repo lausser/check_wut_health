@@ -7,8 +7,9 @@ sub init {
   $self->get_snmp_objects("LIEBERT-GP-SYSTEM-MIB", qw(
       lgpSysState
   ));
+  $self->mult_snmp_max_msg_size(2);
   $self->get_snmp_tables("LIEBERT-GP-ENVIRONMENTAL-MIB", [
-    ["sensors", "lgpEnvRemoteSensorTable", "Classes::Liebert::Components::SensorSubsystem::Sensor", sub { shift->{lgpEnvRemoteSensorMode} ne 'disable'; } ],
+    ["sensors", "lgpEnvRemoteSensorTable", "Classes::Liebert::Components::SensorSubsystem::RemoteSensor", sub { shift->{lgpEnvRemoteSensorMode} ne 'disable'; } ],
   ]);
   $self->get_snmp_tables("LIEBERT-GP-FLEXIBLE-MIB", [
 #    ["debugflexibles", "lgpFlexibleBasicTable", "Monitoring::GLPlugin::SNMP::TableItem"],
@@ -17,7 +18,12 @@ sub init {
       return 0 if exists $o->{lgpFlexibleEntryValue} && $o->{lgpFlexibleEntryValue} eq 'Unavailable';
       return 0 if exists $o->{lgpFlexibleEntryValue} && $o->{lgpFlexibleEntryValue} eq 'Remote';
       return 0 if exists $o->{lgpFlexibleEntryValue} && $o->{lgpFlexibleEntryValue} eq 'Average';
+      return 0 if exists $o->{lgpFlexibleEntryValue} && $o->{lgpFlexibleEntryValue} eq 'Supply';
+      return 0 if exists $o->{lgpFlexibleEntryValue} && $o->{lgpFlexibleEntryValue} eq 'enabled';
+      return 0 if exists $o->{lgpFlexibleEntryValue} && $o->{lgpFlexibleEntryValue} eq 'Alarm';
       return 0 if exists $o->{lgpFlexibleEntryDataLabel} && $o->{lgpFlexibleEntryDataLabel} =~ /Sensor Order Identifier/;
+      return 0 if exists $o->{lgpFlexibleEntryDataLabel} && $o->{lgpFlexibleEntryDataLabel} =~ / Set Point/;
+      return 0 if exists $o->{lgpFlexibleEntryDataLabel} && $o->{lgpFlexibleEntryDataLabel} =~ / Band/;
       return 1;
     }],
   ]);
@@ -39,15 +45,10 @@ sub init {
     }
   }
   @{$self->{flexibles}} = grep { ! exists $_->{invalid} || $_->{invalid} != 1 } @{$self->{flexibles}};
-  foreach (@{$self->{flexibles}}) {
-	  printf "%s %s %s\n",
-$_->{invalid} ? 1 : 0, $_->{lgpFlexibleEntryValue}, ref($_);
-
-  }
 }
 
 
-package Classes::Liebert::Components::SensorSubsystem::Sensor;
+package Classes::Liebert::Components::SensorSubsystem::RemoteSensor;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
 
@@ -58,7 +59,7 @@ sub finish {
 
 sub check {
   my ($self) = @_;
-  $self->add_info(sprintf 'temperature %s is %.2fC',
+  $self->add_info(sprintf 'remote temperature %s is %.2fC',
       $self->{label}, $self->{lgpEnvRemoteSensorTempMeasurementDegC});
   $self->add_ok();
   $self->add_perfdata(
@@ -79,23 +80,24 @@ sub finish {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::EventControl';
   } elsif ($self->{lgpFlexibleEntryValue} =~ /Event Type$/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::EventType';
-  } elsif ($self->{lgpFlexibleEntryValue} =~ /Event/) {
+  } elsif ($self->{lgpFlexibleEntryValue} =~ /Event$/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Event';
+  } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /^Fan/) {
+    bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Fan';
+  } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "%") {
+    bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Percent';
   } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /Temperature Threshold/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::TemperatureThreshold';
   } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /Temperature/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Temperature';
   } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "deg F") {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Temperature';
-  } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "%") {
-    bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Percent';
   }
   if (ref($self) ne 'Classes::Liebert::Components::SensorSubsystem::Flexible') {
     $self->finish();
   } else {
     $self->{invalid} = 1;
   }
-  printf "%s\n", Data::Dumper::Dumper($self);
 }
 
 sub check {
@@ -158,13 +160,27 @@ use strict;
 
 sub finish {
   my ($self) = @_;
-  if ($self->{lgpFlexibleEntryValue} =~ /^(Remote|Average)/) {
+  if ($self->{lgpFlexibleEntryDataLabel} =~ /(Minimum|Average|Maximum) Temperature/) {
+    $self->{invalid} = 1;
+    return;
+  }
+  if (! defined $self->{lgpFlexibleEntryValue} || $self->{lgpFlexibleEntryValue} !~ /^[\d\.]+$/) {
+    $self->{invalid} = 1;
+    return;
+  }
+  if (abs($self->{lgpFlexibleEntryValue}) > 32700) {
     $self->{invalid} = 1;
     return;
   }
   if ($self->{lgpFlexibleEntryUnitsOfMeasure} eq "deg F") {
     $self->{lgpFlexibleEntryValue} = ($self->{lgpFlexibleEntryValue} - 32) * 5 / 9;
     $self->{lgpFlexibleEntryUnitsOfMeasure} = "deg C";
+    # fuehrt dazu, dass die sensoren doppelt erscheinen. ich gehe jetzt mal davon aus
+    # dass es _immer_ sowohl C als auch F gibt:
+    $self->{invalid} = 1;
+  }
+  if ($self->{lgpFlexibleEntryDataLabel} eq "Remote Sensor Temperature") {
+    $self->{lgpFlexibleEntryDataLabel} .= " ".@{$self->{indices}}[-1];
   }
 }
 
@@ -185,7 +201,7 @@ use strict;
 
 sub finish {
   my ($self) = @_;
-  if ($self->{lgpFlexibleEntryValue} =~ /^(Remote|Average)/) {
+  if (! defined $self->{lgpFlexibleEntryValue} || $self->{lgpFlexibleEntryValue} !~ /^[\d\.]+$/) {
     $self->{invalid} = 1;
     return;
   }
@@ -213,8 +229,29 @@ sub check {
       $self->{lgpFlexibleEntryValue});
   $self->add_ok();
   $self->add_perfdata(
-      label => 'temp_'.$self->{lgpFlexibleEntryDataLabel},
+      label => 'pct_'.$self->{lgpFlexibleEntryDataLabel},
       value => $self->{lgpFlexibleEntryValue},
+      uom => '%',
+      max => 100,
+      min => 0,
+  );
+}
+
+package Classes::Liebert::Components::SensorSubsystem::Flexible::Fan;
+our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible::Percent);
+use strict;
+
+sub check {
+  my ($self) = @_;
+  $self->add_info(sprintf '%s is %.2f%%', $self->{lgpFlexibleEntryDataLabel},
+      $self->{lgpFlexibleEntryValue});
+  $self->add_ok();
+  $self->add_perfdata(
+      label => 'fan_'.$self->{lgpFlexibleEntryDataLabel},
+      value => $self->{lgpFlexibleEntryValue},
+      uom => '%',
+      max => 100,
+      min => 0,
   );
 }
 
