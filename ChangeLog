@@ -1,3 +1,5 @@
+* 2019-06-03 2.5.0.1
+  fix thresholds for liebert hum/temp
 * 2019-03-22 2.5
   implement more sensors for liebert/vertiv crv
 * 2017-10-29 2.4.0.2
