@@ -1,3 +1,7 @@
+* 2019-10-21 2.5.0.3
+  check Liebert for lgpSysControlOperationOnOff/lgpEnvStateSystem = off
+* 2019-06-03 2.5.0.2
+  fix the fix
 * 2019-06-03 2.5.0.1
   fix thresholds for liebert hum/temp
 * 2019-03-22 2.5
