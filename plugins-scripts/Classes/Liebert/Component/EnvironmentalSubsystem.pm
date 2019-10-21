@@ -17,10 +17,12 @@ sub init {
     ["temperatures", "lgpEnvTemperatureDegCTable", "Classes::Liebert::Components::EnvironmentalSubsystem::Temperature", sub { return defined shift->{lgpEnvTemperatureMeasurementTenthsDegC} ? 1 : 0; }],
     ["humidities", "lgpEnvHumidityRelTable", "Classes::Liebert::Components::EnvironmentalSubsystem::Humidity", sub { return defined shift->{lgpEnvHumidityMeasurementRelTenths} ? 1 : 0; }],
   ]);
-  $self->get_snmp_tables("LIEBERT-GP-FLEXIBLE-MIB", [
-    ["flexentries", "lgpFlexibleBasicTable", "Classes::Liebert::Components::EnvironmentalSubsystem::FlexibleBasic"],
-    ["flexextended", "lgpFlexibleExtendedTable", "Classes::Liebert::Components::EnvironmentalSubsystem::FlexibleExtended"],
-  ]);
+# only for debugging/testing. these tables take several minutes and are
+# of no use yet
+#  $self->get_snmp_tables("LIEBERT-GP-FLEXIBLE-MIB", [
+#    ["flexentries", "lgpFlexibleBasicTable", "Classes::Liebert::Components::EnvironmentalSubsystem::FlexibleBasic"],
+#    ["flexextended", "lgpFlexibleExtendedTable", "Classes::Liebert::Components::EnvironmentalSubsystem::FlexibleExtended"],
+#  ]);
 }
 
 sub check {

@@ -1,3 +1,5 @@
+* 2019-10-21 2.5.0.4
+  remove unnecessary liebert tables
 * 2019-10-21 2.5.0.3
   check Liebert for lgpSysControlOperationOnOff/lgpEnvStateSystem = off
 * 2019-06-03 2.5.0.2
