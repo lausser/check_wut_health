@@ -33,15 +33,6 @@ use strict;
 sub finish {
   my($self) = @_;
   my $prefix = $self->{sensorPrefix};
-printf "-->%s\n", ref($self);
-printf "%s\n", Data::Dumper::Dumper($self);
-if (! defined $prefix) {
- die "scheisn".ref($self);
-}
-if (! defined $self->{$prefix."SensorValue"} ) {
-printf "index %s\n", $self->{flat_indices};
- die "owascheisn".ref($self);
-}
   if ($self->{$prefix."SensorValue"} =~ /^[\d\.\-]+$/) {
     $self->{is_numeric} = 1;
     $self->{$prefix."SensorValue"} /= 10.0;
