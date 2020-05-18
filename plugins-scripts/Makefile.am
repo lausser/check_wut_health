@@ -14,6 +14,7 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/MIB2MIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/EMDMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENVIROMUX5D.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/HWGWLDMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/SNMPFRAMEWORKMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/STULZWIB8000MIB.pm \
@@ -40,6 +41,10 @@ EXTRA_MODULES=\
   Classes/Liebert/Component/SensorSubsystem.pm \
   Classes/Liebert.pm \
   Classes/Papouch.pm \
+  Classes/NTI/ENVIROMUX5D/Component/EnvironmentalSubsystem.pm \
+  Classes/NTI/ENVIROMUX5D/Component/SensorSubsystem.pm \
+  Classes/NTI/ENVIROMUX5D.pm \
+  Classes/NTI.pm \
   Classes/Device.pm
 
 SED=/bin/sed

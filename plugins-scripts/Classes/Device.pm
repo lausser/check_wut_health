@@ -38,6 +38,8 @@ sub classify {
       } elsif ($self->implements_mib('THE_V01-MIB')) {
         bless $self, 'Classes::Papouch';
         $self->debug('using Classes::Papouch');
+      } elsif ($self->implements_mib('ENVIROMUX5D')) {
+        $self->rebless('Classes::NTI');
       } else {
         if (my $class = $self->discover_suitable_class()) {
           bless $self, $class;
