@@ -1,3 +1,8 @@
+# nicht vergessen
+#  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/DATAAIREDAP4ALMIB.pm
+#  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/RITTALLCPDXMIB.pm
+#  Classes/PCOWEB.pm
+
 libexec_SCRIPTS=check_wut_health
 GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/Commandline/Extraopts.pm \
@@ -13,6 +18,7 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/TableItem.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/MIB2MIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/HOSTRESOURCESMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/EMDMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENVIROMUX5D.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/HWGWLDMIB.pm \
@@ -27,7 +33,10 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LIEBERTGPPOWERMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LIEBERTGPREGISTRATIONMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LIEBERTGPSYSTEMMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/THEV01MIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/THEV01MIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPACPACCMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPENVSICMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPRDUMIB.pm
 EXTRA_MODULES=\
   Classes/WebGraphThermoBaro.pm \
   Classes/WebGraphThermoBaroUS.pm \
@@ -45,6 +54,9 @@ EXTRA_MODULES=\
   Classes/NTI/ENVIROMUX5D/Component/SensorSubsystem.pm \
   Classes/NTI/ENVIROMUX5D.pm \
   Classes/NTI.pm \
+  Classes/Emerson/RDU/Component/EnvironmentalSubsystem.pm \
+  Classes/Emerson/RDU/Component/SensorSubsystem.pm \
+  Classes/Emerson/RDU.pm \
   Classes/Device.pm
 
 SED=/bin/sed

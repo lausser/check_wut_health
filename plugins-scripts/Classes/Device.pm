@@ -40,6 +40,10 @@ sub classify {
         $self->debug('using Classes::Papouch');
       } elsif ($self->implements_mib('ENVIROMUX5D')) {
         $self->rebless('Classes::NTI');
+      } elsif ($self->implements_mib('DATAAIRE-DAP4-AL-MIB')) {
+        $self->rebless('Classes::PCOWEB');
+      } elsif ($self->implements_mib('ENP-RDU-MIB')) {
+        $self->rebless('Classes::Emerson::RDU');
       } else {
         if (my $class = $self->discover_suitable_class()) {
           bless $self, $class;
