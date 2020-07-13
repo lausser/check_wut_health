@@ -36,7 +36,8 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/THEV01MIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPACPACCMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPENVSICMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPRDUMIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPRDUMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/RITTALLCPDXMIB.pm
 EXTRA_MODULES=\
   Classes/WebGraphThermoBaro.pm \
   Classes/WebGraphThermoBaroUS.pm \
@@ -57,6 +58,10 @@ EXTRA_MODULES=\
   Classes/Emerson/RDU/Component/EnvironmentalSubsystem.pm \
   Classes/Emerson/RDU/Component/SensorSubsystem.pm \
   Classes/Emerson/RDU.pm \
+  Classes/Rittal.pm \
+  Classes/Rittal/LCPDX.pm \
+  Classes/Rittal/LCPDX/Component/EnvironmentalSubsystem.pm \
+  Classes/Rittal/LCPDX/Component/SensorSubsystem.pm \
   Classes/Device.pm
 
 SED=/bin/sed

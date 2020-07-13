@@ -40,8 +40,17 @@ sub classify {
         $self->debug('using Classes::Papouch');
       } elsif ($self->implements_mib('ENVIROMUX5D')) {
         $self->rebless('Classes::NTI');
-      } elsif ($self->implements_mib('DATAAIRE-DAP4-AL-MIB')) {
-        $self->rebless('Classes::PCOWEB');
+      } elsif ($self->implements_mib('RITTAL-LCP-DX-MIB') || $self->get_snmp_object('RITTAL-LCP-DX-MIB', 'setpoint-lcp')) {
+        $self->rebless('Classes::Rittal::LCPDX');
+        # Rumtrickserei, Mib alleine reicht nicht. Wegen:
+        # OMD[mon-p1]:~$ snmpwalk -ObentU -v2c -c public 10.211.124.65 1.3.6.1.4.1.9839.2.1
+        # .1.3.6.1.4.1.9839.2.1.1.1.0 = INTEGER: 0
+        # .1.3.6.1.4.1.9839.2.1.1.2.0 = INTEGER: 0
+        # ...
+        # OMD[mon-p1]:~$ snmpwalk -ObentU -v2c -c public 10.211.124.65 1.3.6.1.4.1.9839.2
+        # .1.3.6.1.4.1.9839.2 = No Such Object available on this agent at this OID
+        # Euch sollte man stundenlang in den Sack dreschen!
+
       } elsif ($self->implements_mib('ENP-RDU-MIB')) {
         $self->rebless('Classes::Emerson::RDU');
       } else {
