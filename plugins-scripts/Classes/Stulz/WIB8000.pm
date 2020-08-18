@@ -18,6 +18,7 @@ use strict;
 
 sub init {
   my $self = shift;
+  $self->bulk_is_baeh(3); # mit dem default von 20 zerlegts das ding
   $self->get_snmp_objects("STULZ-WIB8000-MIB", qw(wibUnitname wibTempUnit
       wibFirmware wibsettingAuxInLow wibsettingAuxInHigh wibsettingAuxInState
   ));
