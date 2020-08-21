@@ -1,3 +1,5 @@
+* 2020-08-21 2.7.1
+  rewrite the Stulz WIB8000, use snmpget instead of walks
 * 2020-08-18 2.7.0.2
   adjust maxrepetitions for Stulz WIB8000 to avoid system freezing
 * 2020-08-15 2.7.0.1
