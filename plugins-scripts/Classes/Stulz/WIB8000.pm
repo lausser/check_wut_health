@@ -95,9 +95,12 @@ sub init {
   $Monitoring::GLPlugin::SNMP::session->timeout(15);
   foreach (@{$self->{bus_device_module}}) {
     my $index = join(".", ($_->{bus}, $_->{device}, $_->{module}));
-    foreach my $oid (qw(unitSupplyAirTemperature)) {
+    my $newer_device_with_supply_temp = 0;
+    my $newer_device_with_supply_hum = 0;
+    foreach my $oid (qw(unitSupplyAirTemperature unitReturnAirTemperature)) {
       next if ! $_->{expect_a_temperature};
       my $value = $self->get_snmp_object("STULZ-WIB8000-MIB", $oid, $index);
+      next if ! defined $value;
       my $temp =
           Classes::Stulz::WIB8000::Component::SensorSubsystem::Temperature->new(
               indices => [split(/\./, $index)],
@@ -110,11 +113,13 @@ sub init {
           return defined $tval ? 1 : 0;
       });
       push(@{$self->{temperatures}}, $temp);
+      $temp->blacklist() if ($oid eq "unitReturnAirTemperature" and $newer_device_with_supply_temp);
+      $newer_device_with_supply_temp = 1 if $oid eq "unitSupplyAirTemperature";
     }
-    #foreach my $oid (qw(unitOutsideAirHumidity)) {
-    foreach my $oid (qw(unitSupplyAirHumidity)) {
+    foreach my $oid (qw(unitSupplyAirHumidity unitReturnAirHumidity)) {
       next if ! $_->{expect_a_temperature};
       my $value = $self->get_snmp_object("STULZ-WIB8000-MIB", $oid, $index);
+      next if ! defined $value;
       my $hum =
           Classes::Stulz::WIB8000::Component::SensorSubsystem::Humidity->new(
               indices => [split(/\./, $index)],
@@ -127,18 +132,15 @@ sub init {
           return defined $hval ? 1 : 0;
       });
       push(@{$self->{humidities}}, $hum);
+      $hum->blacklist() if ($oid eq "unitReturnAirHumidity" and $newer_device_with_supply_hum);
+      $newer_device_with_supply_hum = 1 if $oid eq "unitSupplyAirHumidity";
     }
     my $this_alarm = {};
     foreach my $oid (qw(commonAlarm)) {
-      next if ! $_->{expect_a_temperature};
       my $value = $self->get_snmp_object("STULZ-WIB8000-MIB", $oid, $index);
       if (defined $value) {
         $this_alarm->{$oid} = $value;
       }
-      #$hum->protect_value($oid.".".$index, "value", sub {
-      #    my $hval = shift;
-      #    return defined $hval ? 1 : 0;
-      #});
     }
     if (%{$this_alarm}) {
       $this_alarm->{indices} = [split(/\./, $index)];
