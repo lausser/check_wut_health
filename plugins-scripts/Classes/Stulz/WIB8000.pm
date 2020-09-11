@@ -113,7 +113,7 @@ sub init {
           return defined $tval ? 1 : 0;
       });
       push(@{$self->{temperatures}}, $temp);
-      $temp->blacklist() if ($oid eq "unitReturnAirTemperature" and $newer_device_with_supply_temp);
+      #$temp->blacklist() if ($oid eq "unitReturnAirTemperature" and $newer_device_with_supply_temp);
       $newer_device_with_supply_temp = 1 if $oid eq "unitSupplyAirTemperature";
     }
     foreach my $oid (qw(unitSupplyAirHumidity unitReturnAirHumidity)) {
@@ -132,7 +132,7 @@ sub init {
           return defined $hval ? 1 : 0;
       });
       push(@{$self->{humidities}}, $hum);
-      $hum->blacklist() if ($oid eq "unitReturnAirHumidity" and $newer_device_with_supply_hum);
+      #$hum->blacklist() if ($oid eq "unitReturnAirHumidity" and $newer_device_with_supply_hum);
       $newer_device_with_supply_hum = 1 if $oid eq "unitSupplyAirHumidity";
     }
     my $this_alarm = {};

@@ -1,3 +1,5 @@
+* 2020-09-11 2.7.2.1
+  do not blacklist returnAir if there is a supplyAir, check both (WIB8000)
 * 2020-09-10 2.7.2
   fallback to returnAir/Hum for Stulz WIB8000 which do not support supplyAir
 * 2020-08-21 2.7.1
