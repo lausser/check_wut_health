@@ -1,3 +1,7 @@
+* 2020-10-28 2.8.0.1
+  add unitName to Stulz temperature output
+* 2020-10-27 2.8
+  rewrite Stulz, implement C1002 according to the oid pdf
 * 2020-09-11 2.7.2.1
   do not blacklist returnAir if there is a supplyAir, check both (WIB8000)
 * 2020-09-10 2.7.2

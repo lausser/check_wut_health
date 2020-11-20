@@ -208,6 +208,7 @@ sub check {
   }
   delete $self->{states};
   foreach (@{$self->{alarms}}) {
+    next if ! defined $self->{$_};
     $self->add_info(sprintf '%s status is %s', $_, $self->{$_});
     if ($self->{$_} eq "alarm") {
       $self->add_critical();
@@ -294,8 +295,8 @@ sub check {
     next if $self->{$_} == 32767;
     next if $self->{$_} == 65535;
     $self->{$_} /= 10;
-    $self->add_perfdata(label => $_,
-        value => $self->{$_}.'_rpm',
+    $self->add_perfdata(label => $_.'_rpm',
+        value => $self->{$_},
     );
   }
   delete $self->{fans};

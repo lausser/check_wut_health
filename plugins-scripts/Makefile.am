@@ -47,6 +47,9 @@ EXTRA_MODULES=\
   Classes/Raritan/EMD.pm \
   Classes/Stulz.pm \
   Classes/Stulz/WIB8000.pm \
+  Classes/Stulz/Unit.pm \
+  Classes/Stulz/C1002.pm \
+  Classes/Stulz/C7000IOC.pm \
   Classes/Liebert/Component/EnvironmentalSubsystem.pm \
   Classes/Liebert/Component/SensorSubsystem.pm \
   Classes/Liebert.pm \
