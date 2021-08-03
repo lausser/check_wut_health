@@ -12,6 +12,7 @@ sub classify {
       if ($self->opts->verbose && $self->opts->verbose) {
         printf "I am a %s\n", $self->{productname};
       }
+      my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
       if ($self->opts->mode =~ /^my-/) {
         $self->load_my_extension();
       } elsif ($self->implements_mib('WebGraph-8xThermometer-MIB')) {
@@ -40,6 +41,12 @@ sub classify {
         $self->debug('using Classes::Papouch');
       } elsif ($self->implements_mib('ENVIROMUX5D')) {
         $self->rebless('Classes::NTI');
+      } elsif ($self->implements_mib("KELVIN-PCOWEB-LCP-DX-MIB") and
+          $self->get_snmp_object("KELVIN-PCOWEB-LCP-DX-MIB", "current-year") and
+          $self->get_snmp_object("KELVIN-PCOWEB-LCP-DX-MIB", "current-year") == $year - 100) {
+        # Meldet sich an der Oberflaeche auch mit Rittal LCP DX. Keine Ahnung,
+        # was das fuer zugekaufter und umetikettierter Dreck ist.
+        $self->rebless('Classes::Carel::pCOWeb');
       } elsif ($self->implements_mib('RITTAL-LCP-DX-MIB') || $self->get_snmp_object('RITTAL-LCP-DX-MIB', 'setpoint-lcp')) {
         $self->rebless('Classes::Rittal::LCPDX');
         # Rumtrickserei, Mib alleine reicht nicht. Wegen:
@@ -50,7 +57,6 @@ sub classify {
         # OMD[mon-p1]:~$ snmpwalk -ObentU -v2c -c public 10.211.124.65 1.3.6.1.4.1.9839.2
         # .1.3.6.1.4.1.9839.2 = No Such Object available on this agent at this OID
         # Euch sollte man stundenlang in den Sack dreschen!
-
       } elsif ($self->implements_mib('ENP-RDU-MIB')) {
         $self->rebless('Classes::Emerson::RDU');
       } else {

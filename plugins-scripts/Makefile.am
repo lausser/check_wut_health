@@ -37,7 +37,9 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPACPACCMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPENVSICMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPRDUMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/RITTALLCPDXMIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/RITTALLCPDXMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/KELVINPCOWEBLCPDXMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/CARELUG40CDZMIB.pm
 EXTRA_MODULES=\
   Classes/WebGraphThermoBaro.pm \
   Classes/WebGraphThermoBaroUS.pm \
@@ -65,6 +67,9 @@ EXTRA_MODULES=\
   Classes/Rittal/LCPDX.pm \
   Classes/Rittal/LCPDX/Component/EnvironmentalSubsystem.pm \
   Classes/Rittal/LCPDX/Component/SensorSubsystem.pm \
+  Classes/Carel/pCOWeb/Component/SensorSubsystem.pm \
+  Classes/Carel/pCOWeb.pm \
+  Classes/Carel.pm \
   Classes/Device.pm
 
 SED=/bin/sed
