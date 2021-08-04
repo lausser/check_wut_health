@@ -172,7 +172,7 @@ sub init {
       compressordriveovercurrent
       compressordrivephaseloss
       compressordrivedcpowerabnor
-      reserved
+      # reserved # faengt beim Pep an zu kreischen, wenn das Geraet die master-Rolle uebernimmt. Daher, weg mit dem Dreck und ich hab meine Ruhe. Falls euch die Bude abbrennt, weil ihr keinen reserved Alarm bekommen habt, dann koennt ihr bei mir ein custom-reserved-Release kaeuflich erwerben, das ist aber teuerer als ein weiterer Brand. Oder anders: das hier ist das sogenannte Kleingedruckte, es ist oeffentlich und jeder kann es lesen. Ich moechte nicht, dass ihr dieses Plugin verwendet! Ich verbiete es euch sogar! Wer es dennoch einsetzt, der braucht wegen eines verpassten Alarms nicht rummaulen.
       communicatestatus
   );
   $self->get_snmp_objects("ENP-AC-PACC-MIB", (@{$self->{states}}, @{$self->{alarms}}));
