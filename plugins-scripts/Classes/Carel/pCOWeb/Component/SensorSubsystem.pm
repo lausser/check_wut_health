@@ -91,6 +91,8 @@ sub check {
   if (defined $self->{dout1}) {
     if ($self->{dout1}) {
       $self->add_ok("Compressor On");
+    } else {
+      $self->add_ok("Compressor Off");
     }
   }
   if (defined $self->{dout2}) {
@@ -114,7 +116,17 @@ sub check {
     }
   }
   if (defined $self->{dout7}) {
-    if ($self->{dout7}) {
+    #     from the source of the lpc.html file:
+    # function parseResults() {
+    #
+    # // DIGITALS variables
+    #
+    # if (digitals[23] == 1)
+    #         { document.getElementById("alarm").innerHTML="<img src=noalarm.gif>"; } else{ document.getElementById("alarm").innerHTML="<img src=alarm.gif>";}
+    #
+    #     So if dout7 = 1 then the device is "ok", and when the value is 0, then we have an alarm
+    # 
+    if (! $self->{dout7}) {
       $self->add_critical("General Alarm Contact");
     }
   }
@@ -265,81 +277,126 @@ sub check {
     }
   }
   if (defined $self->{"b11-value"}) {
+    $self->{"b11-value"} /= 10;
     $self->set_thresholds(metric => "b11-value", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "b11-value", value => $self->{"b11-value"});
     if ($level) {
       $self->add_info(sprintf "%s is %d", "B11 Probe Value - Compressor Discharge Pressure", $self->{"b11-value"});
       $self->add_message($level);
     }
+    $self->add_perfdata(
+        label => "cond-pressure",
+        value => $self->{"b11-value"},
+    );
   }
   if (defined $self->{"b12-value"}) {
+    $self->{"b12-value"} /= 10;
     $self->set_thresholds(metric => "b12-value", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "b12-value", value => $self->{"b12-value"});
     if ($level) {
       $self->add_info(sprintf "%s is %d", "B12 Probe Value - Compressor Suction Pressure", $self->{"b12-value"});
       $self->add_message($level);
     }
+    $self->add_perfdata(
+        label => "evap-pressure",
+        value => $self->{"b12-value"},
+    );
   }
   if (defined $self->{"evap-temp"}) {
+    $self->{"evap-temp"} /= 10;
     $self->set_thresholds(metric => "evap-temp", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "evap-temp", value => $self->{"evap-temp"});
     if ($level) {
       $self->add_info(sprintf "%s is %d", "Evaporation Temperature", $self->{"evap-temp"});
       $self->add_message($level);
     }
+    $self->add_perfdata(
+        label => "evap-temp",
+        value => $self->{"evap-temp"},
+    );
   }
   if (defined $self->{"cond-temp"}) {
+    $self->{"cond-temp"} /= 10;
     $self->set_thresholds(metric => "cond-temp", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "cond-temp", value => $self->{"cond-temp"});
     if ($level) {
       $self->add_info(sprintf "%s is %d", "Condensation Temperature", $self->{"cond-temp"});
       $self->add_message($level);
     }
+    $self->add_perfdata(
+        label => "cond-temp",
+        value => $self->{"cond-temp"},
+    );
   }
   # aobj15
   # aobj16
   # ...
   # aobj20
   if (defined $self->{"medium-temp-out"}) {
+    $self->{"medium-temp-out"} /= 10;
     $self->set_thresholds(metric => "medium-temp-out", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "medium-temp-out", value => $self->{"medium-temp-out"});
     if ($level) {
       $self->add_info(sprintf "%s is %d", "Server Medium Temp Out - (Room)", $self->{"medium-temp-out"});
       $self->add_message($level);
     }
+    $self->add_perfdata(
+        label => "medium-temp-out",
+        value => $self->{"medium-temp-out"},
+    );
   }
   if (defined $self->{"medium-temp-in"}) {
+    $self->{"medium-temp-in"} /= 10;
     $self->set_thresholds(metric => "medium-temp-in", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "medium-temp-in", value => $self->{"medium-temp-in"});
     if ($level) {
       $self->add_info(sprintf "%s is %d", "Server Medium Temp In - (LCP)", $self->{"medium-temp-in"});
       $self->add_message($level);
     }
+    $self->add_perfdata(
+        label => "medium-temp-in",
+        value => $self->{"medium-temp-in"},
+    );
   }
   if (defined $self->{"rotor-speed-rps"}) {
+    $self->{"rotor-speed-rps"} /= 10;
     $self->set_thresholds(metric => "rotor-speed-rps", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "rotor-speed-rps", value => $self->{"rotor-speed-rps"});
     if ($level) {
       $self->add_info(sprintf "%s is %d", "Compressor Rotor Speed (RPS)", $self->{"rotor-speed-rps"});
       $self->add_message($level);
     }
+    $self->add_perfdata(
+        label => "rotor-speed-rps",
+        value => $self->{"rotor-speed-rps"},
+    );
   }
   if (defined $self->{"motor-current"}) {
+    $self->{"motor-current"} /= 10;
     $self->set_thresholds(metric => "motor-current", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "motor-current", value => $self->{"motor-current"});
     if ($level) {
       $self->add_info(sprintf "%s is %d", "Compressor Motor Current (Amp)", $self->{"motor-current"});
       $self->add_message($level);
     }
+    $self->add_perfdata(
+        label => "motor-current",
+        value => $self->{"motor-current"},
+    );
   }
   # aobj47
   if (defined $self->{"setpoint-lcp"}) {
+    $self->{"setpoint-lcp"} /= 10;
     $self->set_thresholds(metric => "setpoint-lcp", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "setpoint-lcp", value => $self->{"setpoint-lcp"});
     if ($level) {
       $self->add_info(sprintf "%s is %d", "Setpoint LCP", $self->{"setpoint-lcp"});
       $self->add_message($level);
     }
+    $self->add_perfdata(
+        label => "setpoint-lcp",
+        value => $self->{"setpoint-lcp"},
+    );
   }
   # integer variables
   if (defined $self->{"rotor-speed-hz"}) {
