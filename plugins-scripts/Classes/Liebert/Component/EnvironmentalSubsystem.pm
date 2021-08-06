@@ -27,11 +27,12 @@ sub init {
 
 sub check {
   my ($self) = @_;
-  $self->add_info(sprintf 'system state is %s/%s', $self->{lgpSysState},
-      $self->{lgpEnvStateSystem});
+  $self->add_info(sprintf 'system state is %s%s', $self->{lgpSysState},
+      defined $self->{lgpEnvStateSystem} ? "/".$self->{lgpEnvStateSystem} : "");
   if ($self->{lgpSysState} eq 'normalWithWarning') {
     $self->add_warning();
-  } elsif ($self->{lgpEnvStateSystem} eq 'off') {
+  } elsif (defined $self->{lgpEnvStateSystem} and
+      $self->{lgpEnvStateSystem} eq 'off') {
     $self->add_warning();
   } elsif ($self->{lgpSysState} eq 'startUp' ||
       $self->{lgpSysState} eq 'normalOperation') {
