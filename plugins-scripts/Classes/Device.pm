@@ -44,8 +44,9 @@ sub classify {
       } elsif ($self->implements_mib('ENVIROMUX5D')) {
         $self->rebless('Classes::NTI');
       } elsif ($self->implements_mib("KELVIN-PCOWEB-LCP-DX-MIB") and
-          $self->get_snmp_object("KELVIN-PCOWEB-LCP-DX-MIB", "current-year") and
-          $self->get_snmp_object("KELVIN-PCOWEB-LCP-DX-MIB", "current-year") == $year - 100) {
+1) {
+          #$self->get_snmp_object("KELVIN-PCOWEB-LCP-DX-MIB", "current-year") and
+          #$self->get_snmp_object("KELVIN-PCOWEB-LCP-DX-MIB", "current-year") == $year - 100) {
         # Meldet sich an der Oberflaeche auch mit Rittal LCP DX. Keine Ahnung,
         # was das fuer zugekaufter und umetikettierter Dreck ist.
         $self->rebless('Classes::Carel::pCOWeb');

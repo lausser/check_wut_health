@@ -307,12 +307,14 @@ sub check {
     $self->set_thresholds(metric => "evap-temp", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "evap-temp", value => $self->{"evap-temp"});
     if ($level) {
-      $self->add_info(sprintf "%s is %d", "Evaporation Temperature", $self->{"evap-temp"});
+      $self->add_info(sprintf "%s is %dDegC", "Evaporation Temperature", $self->{"evap-temp"});
       $self->add_message($level);
     }
     $self->add_perfdata(
         label => "evap-temp",
         value => $self->{"evap-temp"},
+        min => -40,
+        max => 60,
     );
   }
   if (defined $self->{"cond-temp"}) {
@@ -320,12 +322,14 @@ sub check {
     $self->set_thresholds(metric => "cond-temp", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "cond-temp", value => $self->{"cond-temp"});
     if ($level) {
-      $self->add_info(sprintf "%s is %d", "Condensation Temperature", $self->{"cond-temp"});
+      $self->add_info(sprintf "%s is %dDegC", "Condensation Temperature", $self->{"cond-temp"});
       $self->add_message($level);
     }
     $self->add_perfdata(
         label => "cond-temp",
         value => $self->{"cond-temp"},
+        min => -40,
+        max => 60,
     );
   }
   # aobj15
@@ -334,28 +338,32 @@ sub check {
   # aobj20
   if (defined $self->{"medium-temp-out"}) {
     $self->{"medium-temp-out"} /= 10;
-    $self->set_thresholds(metric => "medium-temp-out", warning => "", critical => "");
+    $self->set_thresholds(metric => "medium-temp-out", warning => "18:28", critical => "10:35");
     my $level = $self->check_thresholds(metric => "medium-temp-out", value => $self->{"medium-temp-out"});
-    if ($level) {
-      $self->add_info(sprintf "%s is %d", "Server Medium Temp Out - (Room)", $self->{"medium-temp-out"});
+    if (1 or $level) {
+      $self->add_info(sprintf "%s is %dDegC", "Server Medium Temp Out - (Room)", $self->{"medium-temp-out"});
       $self->add_message($level);
     }
     $self->add_perfdata(
         label => "medium-temp-out",
         value => $self->{"medium-temp-out"},
+        min => 0,
+        max => 50,
     );
   }
   if (defined $self->{"medium-temp-in"}) {
     $self->{"medium-temp-in"} /= 10;
-    $self->set_thresholds(metric => "medium-temp-in", warning => "", critical => "");
+    $self->set_thresholds(metric => "medium-temp-in", warning => "18:28", critical => "10:35");
     my $level = $self->check_thresholds(metric => "medium-temp-in", value => $self->{"medium-temp-in"});
     if ($level) {
-      $self->add_info(sprintf "%s is %d", "Server Medium Temp In - (LCP)", $self->{"medium-temp-in"});
+      $self->add_info(sprintf "%s is %dDegC", "Server Medium Temp In - (LCP)", $self->{"medium-temp-in"});
       $self->add_message($level);
     }
     $self->add_perfdata(
         label => "medium-temp-in",
         value => $self->{"medium-temp-in"},
+        min => 0,
+        max => 50,
     );
   }
   if (defined $self->{"rotor-speed-rps"}) {
@@ -408,19 +416,30 @@ sub check {
     }
   }
   if (defined $self->{"drive-status"}) {
-    $self->set_thresholds(metric => "drive-status", warning => "", critical => "");
-    my $level = $self->check_thresholds(metric => "drive-status", value => $self->{"drive-status"});
-    if ($level) {
-      $self->add_info(sprintf "%s is %d", "Driver Status", $self->{"drive-status"});
-      $self->add_message($level);
+    # 0..2, normalerweise 1
+    # Anwender meint, er bekommt unnoetigerweise einen Alarm, wenn das
+    # Geraet im Standby ist. Service History zeigt, dass sich das so aeussert:
+    # CRITICAL - Driver Status is 0, Compressor Off, Server Medium Temp Out - (Room) is 24DegC, Fans Speed (percent) is 30%
+    # 11.1.21 (NSR2615857), dann gibt's dafuer jetzt einen Hinweis
+    $self->add_info(sprintf "%s is %d", "Driver Status", $self->{"drive-status"});
+    if (defined $self->{dout1} and not $self->{dout1} and $self->{"drive-status"} == 0) {
+      # Compressor Off
+      $self->annotate_info("In Standby");
     }
+    if ($self->{"drive-status"} == 0) {
+      if (defined $self->{dout1} and not $self->{dout1} and $self->{"drive-status"} == 0) {
+        $self->add_ok();
+      } else {
+        $self->add_unknown();
+      }
+    } elsif ($self->{"drive-status"} == 2) {
+      $self->add_critical();
+    } 
   }
   if (defined $self->{"error-code"}) {
-    $self->set_thresholds(metric => "error-code", warning => "", critical => "");
-    my $level = $self->check_thresholds(metric => "error-code", value => $self->{"error-code"});
-    if ($level) {
+    if ($self->{"error-code"}) {
       $self->add_info(sprintf "%s is %d", "Current Error Code", $self->{"error-code"});
-      $self->add_message($level);
+      $self->add_warning();
     }
   }
   if (defined $self->{"drive-temp"}) {
@@ -497,6 +516,7 @@ sub check {
     }
   }
   if (defined $self->{"y3-AOut3"}) {
+    $self->{"y3-AOut3"} /= 10; # hat 461 bei fans-speed-percent = 46
     $self->set_thresholds(metric => "y3-AOut3", warning => "", critical => "");
     my $level = $self->check_thresholds(metric => "y3-AOut3", value => $self->{"y3-AOut3"});
     if ($level) {
@@ -511,8 +531,8 @@ sub check {
         critical => 95
     );
     my $level = $self->check_thresholds(metric => "fans-speed-percent", value => $self->{"fans-speed-percent"});
-    if ($level) {
-      $self->add_info(sprintf "fan speed is %d%%", $self->{"fans-speed-percent"});
+    if (1 or $level) {
+      $self->add_info(sprintf "Fans Speed (percent) is %d%%", $self->{"fans-speed-percent"});
 
       $self->add_message($level);
     }
@@ -528,7 +548,7 @@ sub check {
     );
     my $level = $self->check_thresholds(metric => "fans-speed-rpm", value => $self->{"fans-speed-rpm"});
     if ($level) {
-      $self->add_info(sprintf "fan speed is %drpm", $self->{"fans-speed-rpm"});
+      $self->add_info(sprintf "Fans Speed (rpm) %drpm", $self->{"fans-speed-rpm"});
       $self->add_message($level);
     }
     $self->add_perfdata(label => "fans-speed-rpm",
