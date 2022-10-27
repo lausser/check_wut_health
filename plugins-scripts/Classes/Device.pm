@@ -18,12 +18,14 @@ sub classify {
       } elsif ($self->implements_mib('WebGraph-8xThermometer-MIB')) {
         bless $self, 'Classes::WebioAn8Graph';
         $self->debug('using Classes::WebioAn8Graph');
+      } elsif ($self->implements_mib('WEBGRAPH-THERMO-HYGROMETER-MIB')) {
+        $self->rebless('Classes::WebGraphThermoHygro');
+      } elsif ($self->implements_mib('WEBGRAPH-THERMO-HYGROMETER-US-MIB')) {
+        $self->rebless('Classes::WebGraphThermoHygroUS');
       } elsif ($self->implements_mib('WebGraph-Thermo-Hygro-Barometer-MIB')) {
-        bless $self, 'Classes::WebGraphThermoBaro';
-        $self->debug('using Classes::WebGraphThermoBaro');
+        $self->rebless('Classes::WebGraphThermoHygroBaro');
       } elsif ($self->implements_mib('WebGraph-Thermo-Hygro-Barometer-US-MIB')) {
-        bless $self, 'Classes::WebGraphThermoBaroUS';
-        $self->debug('using Classes::WebGraphThermoBaroUS');
+        $self->rebless('Classes::WebGraphThermoHygroBaroUS');
       } elsif ($self->implements_mib('HWg-WLD-MIB')) {
         bless $self, 'Classes::HWG::WLD';
         $self->debug('using Classes::HWG::WLD');
