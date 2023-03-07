@@ -107,6 +107,8 @@ sub rebless {
     bless $self, "Classes::WebGraphThermoHygro::SensorSubsystem::Sensor::Temperature";
   } elsif ($self->{wtWebGraphThermHygroPortName} =~ /^hum/i) {
     bless $self, "Classes::WebGraphThermoHygro::SensorSubsystem::Sensor::Humidity";
+  } elsif ($self->{wtWebGraphThermoHygroPortName} =~ /rel.*feuchte/i) {
+    bless $self, "Classes::WebGraphThermoHygro::SensorSubsystem::Sensor::Humidity";
   } elsif ($self->{wtWebGraphThermHygroPortName} =~ /^pres/i) {
     bless $self, "Classes::WebGraphThermoHygro::SensorSubsystem::Sensor::Pressure";
   }
@@ -288,14 +290,6 @@ sub init {
   my $self = shift;
   $self->get_snmp_objects("WEBGRAPH-THERMO-HYGROMETER-US-MIB", 
       qw(wtWebGraphThermoHygroDiagErrorCount wtWebGraphThermoHygroDiagErrorMessage));
-  foreach my $key (keys %{$self}) {
-    my $de_key = $key =~ s/wtWebGraphThermoHygro/wtWebGraphThermHygro/r;
-    if (exists $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'WEBGRAPH-THERMO-HYGROMETER-MIB'}->{$de_key} &&
-        exists $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'WEBGRAPH-THERMO-HYGROMETER-US-MIB'}->{$key}) {
-      $self->{$de_key} = $self->{$key};
-      delete $self->{$key};
-    }
-  }
 }
 
 
@@ -312,33 +306,214 @@ sub init {
   $self->get_snmp_objects("WEBGRAPH-THERMO-HYGROMETER-US-MIB",
       qw(wtWebGraphThermoHygroSensors wtWebGraphThermoHygroAlarmCount wtWebGraphThermoHygroPorts));
   $self->get_snmp_tables("WEBGRAPH-THERMO-HYGROMETER-US-MIB", [
-      ["sensors", "wtWebGraphThermoHygroBinaryTempValueTable", "Classes::WebGraphThermoHygro::SensorSubsystem::Sensor"],
-      ["alarms", "wtWebGraphThermoHygroAlarmTable", "Classes::WebGraphThermoHygro::SensorSubsystem::Alarm"],
-      ["alarmsf", "wtWebGraphThermoHygroAlarmIfTable", "Classes::WebGraphThermoHygro::SensorSubsystem::AlarmIf"],
-      ["ports", "wtWebGraphThermoHygroPortTable", "Classes::WebGraphThermoHygro::SensorSubsystem::Port"],
+      ["sensors", "wtWebGraphThermoHygroBinaryTempValueTable", "Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor"],
+      ["alarms", "wtWebGraphThermoHygroAlarmTable", "Classes::WebGraphThermoHygroUS::SensorSubsystem::Alarm"],
+      ["alarmsf", "wtWebGraphThermoHygroAlarmIfTable", "Classes::WebGraphThermoHygroUS::SensorSubsystem::AlarmIf"],
+      ["ports", "wtWebGraphThermoHygroPortTable", "Classes::WebGraphThermoHygroUS::SensorSubsystem::Port"],
   ]);
   @{$self->{sensors}} = grep { $self->filter_name($_->{flat_indices}) } @{$self->{sensors}};
-  foreach my $key (keys %{$self}) {
-    my $de_key = $key =~ s/wtWebGraphThermoHygro/wtWebGraphThermHygro/r;
-    if (exists $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'WEBGRAPH-THERMO-HYGROMETER-MIB'}->{$de_key} &&
-        exists $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'WEBGRAPH-THERMO-HYGROMETER-US-MIB'}->{$key}) {
-      $self->{$de_key} = $self->{$key};
-      delete $self->{$key};
-    }
-  }
-  foreach my $table (qw(sensors alarms alarmsf ports)) {
-    foreach my $element (@{$self->{$table}}) {
-      foreach my $key (keys %{$element}) {
-        my $de_key = $key =~ s/wtWebGraphThermoHygro/wtWebGraphThermHygro/r;
-        if (exists $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'WEBGRAPH-THERMO-HYGROMETER-MIB'}->{$de_key} &&
-            exists $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'WEBGRAPH-THERMO-HYGROMETER-US-MIB'}->{$key}) {
-          $element->{$de_key} = $element->{$key};
-          delete $element->{$key};
-        }
+  $self->finish();
+}
+
+
+sub finish {
+  my ($self) = @_;
+  foreach my $sensor (@{$self->{sensors}}) {
+    $sensor->{wtWebGraphThermoHygroBinaryTempValue} /= 10;
+    $sensor->{alarms} = [];
+    foreach my $alarm (@{$self->{alarms}}) {
+      if ($alarm->belongs_to() eq $sensor->{flat_indices}) {
+        push(@{$sensor->{alarms}}, $alarm);
       }
     }
+    foreach my $port (@{$self->{ports}}) {
+      if ($port->{flat_indices} eq $sensor->{flat_indices}) {
+        $sensor->{wtWebGraphThermoHygroPortName} = $port->{wtWebGraphThermoHygroPortName};
+        if ($sensor->{wtWebGraphThermoHygroPortName} =~ /^0x/) {
+          $sensor->{wtWebGraphThermoHygroPortName} =~ s/\s//g;
+          $sensor->{wtWebGraphThermoHygroPortName} =~ s/0x(([0-9a-f][0-9a-f])+)/pack('H*', $1)/ie;
+        }elsif ($sensor->{wtWebGraphThermoHygroPortName} =~ /^(?:[0-9a-f]{2} )+[0-9a-f]{2}$/i) {
+          $sensor->{wtWebGraphThermoHygroPortName} =~ s/\s//g;
+          $sensor->{wtWebGraphThermoHygroPortName} =~ s/(([0-9a-f][0-9a-f])+)/pack('H*', $1)/ie;
+        }
+        $sensor->{wtWebGraphThermoHygroPortName} = $self->accentfree($sensor->{wtWebGraphThermoHygroPortName});
+        $sensor->{wtWebGraphThermoHygroPortName} =~ s/[^[:ascii:]]//g;
+      }
+    }
+    $sensor->rebless();
   }
-  $self->finish();
+}
+
+
+package Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor;
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
+use strict;
+
+
+sub rebless {
+  my $self = shift;
+  # achtung, die name koennen auch so lauten: Temperatura, Humedad Relativa, Presischmiern Atmosfschmier
+  if ($self->{wtWebGraphThermoHygroPortName} =~ /^temp/i) {
+    bless $self, "Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Temperature";
+  } elsif ($self->{wtWebGraphThermoHygroPortName} =~ /^hum/i) {
+    bless $self, "Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Humidity";
+  } elsif ($self->{wtWebGraphThermoHygroPortName} =~ /rel.*feuchte/i) {
+    bless $self, "Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Humidity";
+  } elsif ($self->{wtWebGraphThermoHygroPortName} =~ /^pres/i) {
+    bless $self, "Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Pressure";
+  }
+}
+
+sub check {
+  my $self = shift;
+  if (scalar(@{$self->{alarms}})) {
+    foreach my $alarm (@{$self->{alarms}}) {
+      my $min = defined $alarm->{wtWebGraphThermoHygroAlarmMin} &&
+          $alarm->{wtWebGraphThermoHygroAlarmMin} ne "" ?
+          $alarm->{wtWebGraphThermoHygroAlarmMin} : $alarm->{wtWebGraphThermoHygroAlarmRHMin};
+      my $max = defined $alarm->{wtWebGraphThermoHygroAlarmMax} &&
+          $alarm->{wtWebGraphThermoHygroAlarmMax} ne "" ?
+          $alarm->{wtWebGraphThermoHygroAlarmMax} : $alarm->{wtWebGraphThermoHygroAlarmRHMax};
+      $self->set_thresholds(
+          metric => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName},
+          warning => $min.":".$max,
+          critical => $min.":".$max);
+      if ($self->check_thresholds(
+          metric => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName},
+          value => $self->{wtWebGraphThermoHygroBinaryTempValue})) {
+        $self->add_message($self->check_thresholds(
+          metric => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName},
+          value => $self->{wtWebGraphThermoHygroBinaryTempValue}),
+          sprintf "%s %s is out of range: [%s..._%s_...%s] (%s)",
+            $self->{label},
+            $self->{wtWebGraphThermoHygroPortName},
+            defined $min ? $min : "-",
+            $self->{wtWebGraphThermoHygroBinaryTempValue},
+            defined $max ? $max : "-",
+            $alarm->{wtWebGraphThermoHygroAlarmMailText});
+      } else {
+        $self->add_ok(sprintf "%s %s is %s%s",
+            $self->{wtWebGraphThermoHygroPortName},
+            $self->{label},
+            $self->{wtWebGraphThermoHygroBinaryTempValue},
+            $self->{units},
+        );
+      }
+      $self->add_perfdata(
+          label => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName},
+          value => $self->{wtWebGraphThermoHygroBinaryTempValue},
+          uom => $self->{units},
+          min => $min,
+          max => $max,
+          warning => ($self->get_thresholds(metric => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName}))[0],
+          critical => ($self->get_thresholds(metric => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName}))[1],
+      );
+    }
+  } else {
+    $self->set_thresholds(
+        metric => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName},
+        warning => undef,
+        critical => undef);
+    $self->add_message($self->check_thresholds(
+          metric => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName},
+          value => $self->{wtWebGraphThermoHygroBinaryTempValue}), sprintf "%s is %s%s",
+        $self->{wtWebGraphThermoHygroPortName},
+        $self->{wtWebGraphThermoHygroBinaryTempValue}, $self->{units});
+    $self->add_perfdata(
+        label => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName},
+        value => $self->{wtWebGraphThermoHygroBinaryTempValue},
+        warning => ($self->get_thresholds(metric => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName}))[0],
+        critical => ($self->get_thresholds(metric => $self->{label}."_".$self->{wtWebGraphThermoHygroPortName}))[1],
+        uom => $self->{units},
+    );
+  }
+}
+
+package Classes::WebGraphThermoHygroUS::SensorSubsystem::Alarm;
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
+
+sub finish {
+  my $self = shift;
+#printf "ALARM %s\n", Data::Dumper::Dumper($self);
+  if ($self->{wtWebGraphThermoHygroAlarmMailText} =~ /^0x(.*)/) {
+    $self->{wtWebGraphThermoHygroAlarmMailText} = $1;
+    $self->{wtWebGraphThermoHygroAlarmMailText} =~ s/([a-fA-F0-9][a-fA-F0-9])/chr(hex($1))/eg;
+    $self->{wtWebGraphThermoHygroAlarmMailText} =~ s/[[:cntrl:]]+//g;
+    $self->{wtWebGraphThermoHygroAlarmMailText} =~ s/\|/ /g;
+  }
+  if ($self->{wtWebGraphThermoHygroAlarmTrigger} !~ /^0x/) {
+    if ($self->{wtWebGraphThermoHygroAlarmTrigger} !~ /^[0-9a-zA-Z ]+/) {
+      $self->{wtWebGraphThermoHygroAlarmTrigger} =
+          "0x".unpack("H*", $self->{wtWebGraphThermoHygroAlarmTrigger});
+    } else {
+      $self->{wtWebGraphThermoHygroAlarmTrigger} =
+          "0x".$self->{wtWebGraphThermoHygroAlarmTrigger};
+    }
+  }
+  $self->{wtWebGraphThermoHygroAlarmTrigger} =~ s/\s//g;
+}
+
+sub belongs_to {
+  my $self = shift;
+  my $trigger = $self->{wtWebGraphThermoHygroAlarmTrigger};
+  if (oct($trigger) & oct("0b00000000000000000000000000000001")) {
+    return 1;
+  } elsif (oct($trigger) & oct("0b00000000000000000000000000000010")) {
+    return 2;
+  } elsif (oct($trigger) & oct("0b00000000000000000000000000000100")) {
+    return 3;
+  } elsif (oct($trigger) & oct("0b00000000000000000000000000001000")) {
+    return 4;
+  } elsif (oct($trigger) & oct("0b00000000000000000000000000010000")) {
+    return 5;
+  } elsif (oct($trigger) & oct("0b00000000000000000000000000100000")) {
+    return 6;
+  } elsif (oct($trigger) & oct("0b00000000000000000000000001000000")) {
+    return 7;
+  } elsif (oct($trigger) & oct("0b00000000000000000000000010000000")) {
+    return 8;
+  } else {
+    return 0;
+  }
+}
+
+package Classes::WebGraphThermoHygroUS::SensorSubsystem::AlarmIf;
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
+
+
+package Classes::WebGraphThermoHygroUS::SensorSubsystem::Port;
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
+
+
+package Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Temperature;
+our @ISA = qw(Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor);
+
+sub check {
+  my $self = shift;
+  $self->{label} = "temperature";
+  $self->{units} = "";
+  $self->SUPER::check();
+}
+
+package Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Humidity;
+our @ISA = qw(Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor);
+
+sub check {
+  my $self = shift;
+  $self->{label} = "humidity";
+  $self->{units} = "%";
+  $self->SUPER::check();
+}
+
+
+package Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Pressure;
+our @ISA = qw(Classes::WebGraphThermoHygroUS::SensorSubsystem::Sensor);
+
+sub check {
+  my $self = shift;
+  $self->{label} = "air pressure";
+  $self->{units} = "";
+  $self->SUPER::check();
 }
 
 
