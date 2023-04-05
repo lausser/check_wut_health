@@ -41,7 +41,9 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENPRDUMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/RITTALLCPDXMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/KELVINPCOWEBLCPDXMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/CARELUG40CDZMIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/CARELUG40CDZMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/GEISTV4MIB.pm
+
 EXTRA_MODULES=\
   Classes/WebGraphThermoHygro.pm \
   Classes/WebGraphThermoHygroBaro.pm \
@@ -72,6 +74,10 @@ EXTRA_MODULES=\
   Classes/Carel/pCOWeb/Component/SensorSubsystem.pm \
   Classes/Carel/pCOWeb.pm \
   Classes/Carel.pm \
+  Classes/Geist.pm \
+  Classes/Geist/V4.pm \
+  Classes/Geist/V4/Component/EnvironmentalSubsystem.pm \
+  Classes/Geist/V4/Component/SensorSubsystem.pm \
   Classes/Device.pm
 
 SED=/bin/sed

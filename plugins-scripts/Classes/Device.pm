@@ -35,6 +35,8 @@ sub classify {
       } elsif ($self->implements_mib('EMD-MIB')) {
         bless $self, 'Classes::Raritan::EMD';
         $self->debug('using Classes::Raritan::EMD');
+      } elsif ($self->implements_mib('GEIST-V4-MIB')) {
+        $self->rebless('Classes::Geist::V4');
       } elsif ($self->implements_mib('LIEBERT-GP-ENVIRONMENTAL-MIB')) {
         bless $self, 'Classes::Liebert';
         $self->debug('using Classes::Liebert');
