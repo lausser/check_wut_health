@@ -30,7 +30,11 @@ sub check {
   }
   if (defined $self->{din3}) {
     if ($self->{din3}) {
-      $self->add_critical("High Pressure Switch Alarm");
+      # 19.4.23 Pep
+      # the vendor confirmed that there is a bug that could trigger the alarm and we are waiting for new firmware that will fix it.
+      # In the meanwhile, is it posible to ignore this OID in the monitoring?
+      #$self->add_critical("High Pressure Switch Alarm");
+      $self->add_critical_mitigation("High Pressure Switch Alarm");
     }
   }
   if (defined $self->{din4}) {
