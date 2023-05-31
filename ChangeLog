@@ -1,3 +1,5 @@
+* 2023-05-31 2.13.1
+  find more flexible sensors from LIEBERT-GP-FLEXIBLE-MIB
 * 2023-05-15 2.13.0.1
   Carel/pCOWeb has a bug, showing a false high pressure (can now be mitigated)
 * 2023-04-05 2.13

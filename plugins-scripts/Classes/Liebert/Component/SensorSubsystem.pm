@@ -82,7 +82,7 @@ sub finish {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::EventType';
   } elsif ($self->{lgpFlexibleEntryValue} =~ /Event$/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Event';
-  } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /^Fan/) {
+  } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /(^Fan|Fan Speed)/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Fan';
   } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "%") {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Percent';
@@ -92,6 +92,10 @@ sub finish {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Temperature';
   } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "deg F") {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Temperature';
+  } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "deg C") {
+    bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Temperature';
+  } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "% RH") {
+    bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Humidity';
   }
   if (ref($self) ne 'Classes::Liebert::Components::SensorSubsystem::Flexible') {
     $self->finish();
@@ -241,6 +245,14 @@ package Classes::Liebert::Components::SensorSubsystem::Flexible::Fan;
 our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible::Percent);
 use strict;
 
+sub finish {
+  my ($self) = @_;
+  if ($self->{lgpFlexibleEntryDataLabel} !~ /speed/i) {
+    $self->{invalid} = 1;
+    return;
+  }
+}
+
 sub check {
   my ($self) = @_;
   $self->add_info(sprintf '%s is %.2f%%', $self->{lgpFlexibleEntryDataLabel},
@@ -252,6 +264,41 @@ sub check {
       uom => '%',
       max => 100,
       min => 0,
+  );
+}
+
+package Classes::Liebert::Components::SensorSubsystem::Flexible::Humidity;
+our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible);
+use strict;
+
+sub finish {
+  my ($self) = @_;
+  if ($self->{lgpFlexibleEntryDataLabel} =~ /(Proportional Band|Set Point)/) {
+    $self->{invalid} = 1;
+    return;
+  }
+  if (! defined $self->{lgpFlexibleEntryValue} || $self->{lgpFlexibleEntryValue} !~ /^[\d\.]+$/) {
+    $self->{invalid} = 1;
+    return;
+  }
+  if (abs($self->{lgpFlexibleEntryValue}) > 32700) {
+    $self->{invalid} = 1;
+    return;
+  }
+  if ($self->{lgpFlexibleEntryDataLabel} eq "Supply Sensor Humidity") {
+    $self->{lgpFlexibleEntryDataLabel} .= " ".@{$self->{indices}}[-1];
+  }
+}
+
+sub check {
+  my ($self) = @_;
+  $self->add_info(sprintf 'humidity %s is %.2fC', $self->{lgpFlexibleEntryDataLabel},
+      $self->{lgpFlexibleEntryValue});
+  $self->add_ok();
+  $self->add_perfdata(
+      label => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
+      value => $self->{lgpFlexibleEntryValue},
+      uom => "%",
   );
 }
 
