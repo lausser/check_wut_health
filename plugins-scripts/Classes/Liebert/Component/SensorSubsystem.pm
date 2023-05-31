@@ -294,7 +294,15 @@ sub check {
   my ($self) = @_;
   $self->add_info(sprintf 'humidity %s is %.2fC', $self->{lgpFlexibleEntryDataLabel},
       $self->{lgpFlexibleEntryValue});
-  $self->add_ok();
+  $self->set_thresholds(
+      metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
+      warning => 70,
+      critical => 80,
+  );
+  $self->add_message($self->check_thresholds(
+      metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
+      value => $self->{lgpFlexibleEntryValue},
+  ));
   $self->add_perfdata(
       label => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
       value => $self->{lgpFlexibleEntryValue},
