@@ -292,7 +292,7 @@ sub finish {
 
 sub check {
   my ($self) = @_;
-  $self->add_info(sprintf 'humidity %s is %.2fC', $self->{lgpFlexibleEntryDataLabel},
+  $self->add_info(sprintf 'humidity %s is %.2f%%', $self->{lgpFlexibleEntryDataLabel},
       $self->{lgpFlexibleEntryValue});
   $self->set_thresholds(
       metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
