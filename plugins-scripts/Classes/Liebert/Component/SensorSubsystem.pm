@@ -27,23 +27,95 @@ sub init {
       return 1;
     }],
   ]);
+  # Remote Sensor Temperature 1
+  # Remote Sensor Temperature 2
+  # ...
+  # Remote Sensor Over Temp Threshold
+  # Remote Sensor Under Temp Threshold
+  #
+  # Ext Air Sensor A Temperature
+  # Ext Air Sensor B Temperature
+  # Ext Air Sensor A Over Temp Threshold
+  # Ext Air Sensor A Under Temp Threshold
+  # Ext Air Sensor A Humidity
+  # Ext Air Sensor B Humidity
+  # Ext Air Sensor A High Humidity Threshold
+  # Ext Air Sensor A Low Humidity Threshold
   foreach my $flexible (@{$self->{flexibles}}) {
+    my $f_index = $flexible->{flat_indices};
+    $f_index =~ s/^1\.3\.6\.1\.4\.1\.476\.1\.42\.3\.9\.20\.1\.10\.1//;
+    $f_index =~ s/^(\d+\.\d+\.\d+).*/$1/;
     if (ref($flexible) eq "Classes::Liebert::Components::SensorSubsystem::Flexible::TemperatureThreshold") {
+      # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5002 = STRING: "Supply Air Temperature"
+      # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5014 = STRING: "High Supply Air Temperature Threshold"
+      # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5018 = STRING: "Low Supply Air Temperature Threshold"
+      # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.2.5002 = STRING: "Supply Air Temperature"
+      # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.2.5014 = STRING: "High Supply Air Temperature Threshold"
+      # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.2.5018 = STRING: "Low Supply Air Temperature Threshold"
       foreach my $temperature (grep {
           ref($_) eq "Classes::Liebert::Components::SensorSubsystem::Flexible::Temperature";
       } @{$self->{flexibles}}) {
+        my $t_index = $temperature->{flat_indices};
+        $t_index =~ s/^1\.3\.6\.1\.4\.1\.476\.1\.42\.3\.9\.20\.1\.10\.1//;
+        $t_index =~ s/^(\d+\.\d+\.\d+).*/$1/;
         if ($flexible->{lgpFlexibleEntryDataLabel} =~ /High (.*) Threshold/ &&
-            $1 eq $temperature->{lgpFlexibleEntryDataLabel}) {
+            $1 eq $temperature->{lgpFlexibleEntryDataLabel} &&
+            $t_index eq $f_index) {
             $temperature->{lgpFlexibleEntryHighThreshold} = $flexible->{lgpFlexibleEntryValue};
             $flexible->{invalid} = 1;
         } elsif ($flexible->{lgpFlexibleEntryDataLabel} =~ /Low (.*) Threshold/ &&
-            $1 eq $temperature->{lgpFlexibleEntryDataLabel}) {
+            $1 eq $temperature->{lgpFlexibleEntryDataLabel} &&
+            $t_index eq $f_index) {
             $temperature->{lgpFlexibleEntryLowThreshold} = $flexible->{lgpFlexibleEntryValue};
+            $flexible->{invalid} = 1;
+        }
+      }
+    } elsif (ref($flexible) eq "Classes::Liebert::Components::SensorSubsystem::Flexible::HumidityThreshold") {
+      foreach my $humidity (grep {
+          ref($_) eq "Classes::Liebert::Components::SensorSubsystem::Flexible::Humidity";
+      } @{$self->{flexibles}}) {
+        my $h_index = $humidity->{flat_indices};
+        $h_index =~ s/^1\.3\.6\.1\.4\.1\.476\.1\.42\.3\.9\.20\.1\.10\.1//;
+        $h_index =~ s/^(\d+\.\d+\.\d+).*/$1/;
+        if ($flexible->{lgpFlexibleEntryDataLabel} =~ /High (.*) Threshold/ &&
+            $1 eq $humidity->{lgpFlexibleEntryDataLabel} &&
+            $h_index eq $f_index) {
+            $humidity->{lgpFlexibleEntryHighThreshold} = $flexible->{lgpFlexibleEntryValue};
+            $flexible->{invalid} = 1;
+        } elsif ($flexible->{lgpFlexibleEntryDataLabel} =~ /Low (.*) Threshold/ &&
+            $1 eq $humidity->{lgpFlexibleEntryDataLabel} &&
+            $h_index eq $f_index) {
+            $humidity->{lgpFlexibleEntryLowThreshold} = $flexible->{lgpFlexibleEntryValue};
+            $flexible->{invalid} = 1;
+        }
+      }
+    } elsif (ref($flexible) eq "Classes::Liebert::Components::SensorSubsystem::Flexible::FanThreshold") {
+      foreach my $fan (grep {
+          ref($_) eq "Classes::Liebert::Components::SensorSubsystem::Flexible::Fan";
+      } @{$self->{flexibles}}) {
+        # Condenser Fan Speed (gibt es mehrmals)
+        # Condenser Low Noise Mode Max Fan Speed
+        # Condenser Normal Mode Max Fan Speed
+        my $h_index = $fan->{flat_indices};
+        $h_index =~ s/^1\.3\.6\.1\.4\.1\.476\.1\.42\.3\.9\.20\.1\.10\.1//;
+        $h_index =~ s/^(\d+\.\d+\.\d+).*/$1/;
+        if ($flexible->{lgpFlexibleEntryDataLabel} =~ /(.*) Low Noise Mode Max Fan Speed/ &&
+            $1." Fan Speed" eq $fan->{lgpFlexibleEntryDataLabel} &&
+            $h_index eq $f_index) {
+            $fan->{lgpFlexibleEntryLowThreshold} = $flexible->{lgpFlexibleEntryValue};
+            $flexible->{invalid} = 1;
+        } elsif ($flexible->{lgpFlexibleEntryDataLabel} =~ /(.*) Normal Mode Max Fan Speed/ &&
+            $1." Fan Speed" eq $fan->{lgpFlexibleEntryDataLabel} &&
+            $h_index eq $f_index) {
+            $fan->{lgpFlexibleEntryHighThreshold} = $flexible->{lgpFlexibleEntryValue};
             $flexible->{invalid} = 1;
         }
       }
     }
   }
+#foreach (sort { $a->{lgpFlexibleEntryDataLabel} cmp $b->{lgpFlexibleEntryDataLabel}} @{$self->{flexibles}}) {
+ #printf "->%s %s\n", $_->{invalid} ? "-":"+", $_->{lgpFlexibleEntryDataLabel};
+#}
   @{$self->{flexibles}} = grep { ! exists $_->{invalid} || $_->{invalid} != 1 } @{$self->{flexibles}};
 }
 
@@ -82,11 +154,13 @@ sub finish {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::EventType';
   } elsif ($self->{lgpFlexibleEntryValue} =~ /Event$/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Event';
-  } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /(^Fan|Fan Speed)/) {
+  } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /Max Fan Speed/ && $self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "%") {
+    bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::FanThreshold';
+  } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /(^Fan|Fan Speed)/ && $self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "%") {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Fan';
   } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "%") {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Percent';
-  } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /Temperature Threshold/) {
+  } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /Temp(erature)* Threshold/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::TemperatureThreshold';
   } elsif ($self->{lgpFlexibleEntryDataLabel} =~ /Temperature/) {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Temperature';
@@ -94,6 +168,8 @@ sub finish {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Temperature';
   } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "deg C") {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Temperature';
+  } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "% RH" && $self->{lgpFlexibleEntryDataLabel} =~ /Threshold/) {
+    bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::HumidityThreshold';
   } elsif ($self->{lgpFlexibleEntryUnitsOfMeasure} && $self->{lgpFlexibleEntryUnitsOfMeasure} eq "% RH") {
     bless $self, 'Classes::Liebert::Components::SensorSubsystem::Flexible::Humidity';
   }
@@ -192,7 +268,32 @@ sub check {
   my ($self) = @_;
   $self->add_info(sprintf 'temperature %s is %.2fC', $self->{lgpFlexibleEntryDataLabel},
       $self->{lgpFlexibleEntryValue});
-  $self->add_ok();
+  my $device_threshold = "";
+  if (exists $self->{lgpFlexibleEntryLowThreshold} and
+      exists $self->{lgpFlexibleEntryHighThreshold}) {
+    $device_threshold = $self->{lgpFlexibleEntryLowThreshold}.":".$self->{lgpFlexibleEntryHighThreshold};
+  } elsif (exists $self->{lgpFlexibleEntryLowThreshold}) {
+    $device_threshold = $self->{lgpFlexibleEntryLowThreshold}.":";
+  } elsif (exists $self->{lgpFlexibleEntryHighThreshold}) {
+    $device_threshold = $self->{lgpFlexibleEntryHighThreshold};
+  }
+  if ($device_threshold) {
+    $self->set_thresholds(
+        metric => 'temp_'.$self->{lgpFlexibleEntryDataLabel},
+        warning => $device_threshold,
+        critical => $device_threshold,
+    );
+  } else {
+    $self->set_thresholds(
+        metric => 'temp_'.$self->{lgpFlexibleEntryDataLabel},
+        warning => "",
+        critical => "",
+    );
+  }
+  $self->add_message($self->check_thresholds(
+      metric => 'temp_'.$self->{lgpFlexibleEntryDataLabel},
+      value => $self->{lgpFlexibleEntryValue},
+  ));
   $self->add_perfdata(
       label => 'temp_'.$self->{lgpFlexibleEntryDataLabel},
       value => $self->{lgpFlexibleEntryValue},
@@ -242,7 +343,7 @@ sub check {
 }
 
 package Classes::Liebert::Components::SensorSubsystem::Flexible::Fan;
-our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible::Percent);
+our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible);
 use strict;
 
 sub finish {
@@ -257,7 +358,25 @@ sub check {
   my ($self) = @_;
   $self->add_info(sprintf '%s is %.2f%%', $self->{lgpFlexibleEntryDataLabel},
       $self->{lgpFlexibleEntryValue});
-  $self->add_ok();
+  my $w_threshold = undef;
+  my $c_threshold = undef;
+  if (exists $self->{lgpFlexibleEntryLowThreshold}) {
+    $w_threshold = $self->{lgpFlexibleEntryLowThreshold};
+  }
+  if (exists $self->{lgpFlexibleEntryHighThreshold}) {
+    $c_threshold = $self->{lgpFlexibleEntryHighThreshold};
+  }
+  if ($w_threshold || $c_threshold) {
+    $self->set_thresholds(
+        metric => 'fan_'.$self->{lgpFlexibleEntryDataLabel},
+        warning => $w_threshold,
+        critical => $c_threshold,
+    );
+  }
+  $self->add_message($self->check_thresholds(
+      metric => 'fan_'.$self->{lgpFlexibleEntryDataLabel},
+      value => $self->{lgpFlexibleEntryValue}
+  ));
   $self->add_perfdata(
       label => 'fan_'.$self->{lgpFlexibleEntryDataLabel},
       value => $self->{lgpFlexibleEntryValue},
@@ -265,6 +384,18 @@ sub check {
       max => 100,
       min => 0,
   );
+}
+
+package Classes::Liebert::Components::SensorSubsystem::Flexible::FanThreshold;
+our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible);
+use strict;
+
+sub finish {
+  my ($self) = @_;
+  if (! defined $self->{lgpFlexibleEntryValue} || $self->{lgpFlexibleEntryValue} !~ /^[\d\.]+$/) {
+    $self->{invalid} = 1;
+    return;
+  }
 }
 
 package Classes::Liebert::Components::SensorSubsystem::Flexible::Humidity;
@@ -294,11 +425,28 @@ sub check {
   my ($self) = @_;
   $self->add_info(sprintf 'humidity %s is %.2f%%', $self->{lgpFlexibleEntryDataLabel},
       $self->{lgpFlexibleEntryValue});
-  $self->set_thresholds(
-      metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
-      warning => 70,
-      critical => 80,
-  );
+  my $device_threshold = "";
+  if (exists $self->{lgpFlexibleEntryLowThreshold} and
+      exists $self->{lgpFlexibleEntryHighThreshold}) {
+    $device_threshold = $self->{lgpFlexibleEntryLowThreshold}.":".$self->{lgpFlexibleEntryHighThreshold};
+  } elsif (exists $self->{lgpFlexibleEntryLowThreshold}) {
+    $device_threshold = $self->{lgpFlexibleEntryLowThreshold}.":";
+  } elsif (exists $self->{lgpFlexibleEntryHighThreshold}) {
+    $device_threshold = $self->{lgpFlexibleEntryHighThreshold};
+  }
+  if ($device_threshold) {
+    $self->set_thresholds(
+        metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
+        warning => $device_threshold,
+        critical => $device_threshold,
+    );
+  } else {
+    $self->set_thresholds(
+        metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
+        warning => 70,
+        critical => 80,
+    );
+  }
   $self->add_message($self->check_thresholds(
       metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
       value => $self->{lgpFlexibleEntryValue},
@@ -310,4 +458,15 @@ sub check {
   );
 }
 
+package Classes::Liebert::Components::SensorSubsystem::Flexible::HumidityThreshold;
+our @ISA = qw(Classes::Liebert::Components::SensorSubsystem::Flexible);
+use strict;
+
+sub finish {
+  my ($self) = @_;
+  if (! defined $self->{lgpFlexibleEntryValue} || $self->{lgpFlexibleEntryValue} !~ /^[\d\.]+$/) {
+    $self->{invalid} = 1;
+    return;
+  }
+}
 

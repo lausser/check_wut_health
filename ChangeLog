@@ -1,3 +1,5 @@
+* 2023-06-29 2.14
+  use Liebert Flexible built-in thresholds
 * 2023-05-31 2.13.1.1
   allow setting of thresholds for LIEBERT-GP-FLEXIBLE-MIB humidity
 * 2023-05-31 2.13.1
