@@ -59,12 +59,22 @@ sub init {
         $t_index =~ s/^1\.3\.6\.1\.4\.1\.476\.1\.42\.3\.9\.20\.1\.10\.1//;
         $t_index =~ s/^(\d+\.\d+\.\d+).*/$1/;
         if ($flexible->{lgpFlexibleEntryDataLabel} =~ /High (.*) Threshold/ &&
-            $1 eq $temperature->{lgpFlexibleEntryDataLabel} &&
+            index($temperature->{lgpFlexibleEntryDataLabel}, $1) == 0 &&
             $t_index eq $f_index) {
             $temperature->{lgpFlexibleEntryHighThreshold} = $flexible->{lgpFlexibleEntryValue};
             $flexible->{invalid} = 1;
         } elsif ($flexible->{lgpFlexibleEntryDataLabel} =~ /Low (.*) Threshold/ &&
-            $1 eq $temperature->{lgpFlexibleEntryDataLabel} &&
+            index($temperature->{lgpFlexibleEntryDataLabel}, $1) == 0 &&
+            $t_index eq $f_index) {
+            $temperature->{lgpFlexibleEntryLowThreshold} = $flexible->{lgpFlexibleEntryValue};
+            $flexible->{invalid} = 1;
+        } elsif ($flexible->{lgpFlexibleEntryDataLabel} =~ /(.*) Over Temp Threshold/ &&
+            index($temperature->{lgpFlexibleEntryDataLabel}, $1." Temperature") == 0 &&
+            $t_index eq $f_index) {
+            $temperature->{lgpFlexibleEntryHighThreshold} = $flexible->{lgpFlexibleEntryValue};
+            $flexible->{invalid} = 1;
+        } elsif ($flexible->{lgpFlexibleEntryDataLabel} =~ /(.*) Under Temp Threshold/ &&
+            index($temperature->{lgpFlexibleEntryDataLabel}, $1." Temperature") == 0 &&
             $t_index eq $f_index) {
             $temperature->{lgpFlexibleEntryLowThreshold} = $flexible->{lgpFlexibleEntryValue};
             $flexible->{invalid} = 1;
@@ -126,7 +136,6 @@ use strict;
 
 sub finish {
   my ($self) = @_;
-  $self->{label} = $self->{lgpEnvRemoteSensorUsrLabel} || $self->{lgpEnvRemoteSensorId};
 }
 
 sub check {
@@ -178,6 +187,8 @@ sub finish {
   } else {
     $self->{invalid} = 1;
   }
+  # lgpFlexibleEntryDataLabel: Today's High Air Temperature
+  $self->{label} = $self->{lgpFlexibleEntryDataLabel} =~ s/'//r;
 }
 
 sub check {
@@ -261,12 +272,13 @@ sub finish {
   }
   if ($self->{lgpFlexibleEntryDataLabel} eq "Remote Sensor Temperature") {
     $self->{lgpFlexibleEntryDataLabel} .= " ".@{$self->{indices}}[-1];
+    $self->{label} = $self->{lgpFlexibleEntryDataLabel} =~ s/'//r;
   }
 }
 
 sub check {
   my ($self) = @_;
-  $self->add_info(sprintf 'temperature %s is %.2fC', $self->{lgpFlexibleEntryDataLabel},
+  $self->add_info(sprintf 'temperature %s is %.2fC', $self->{label},
       $self->{lgpFlexibleEntryValue});
   my $device_threshold = "";
   if (exists $self->{lgpFlexibleEntryLowThreshold} and
@@ -279,23 +291,23 @@ sub check {
   }
   if ($device_threshold) {
     $self->set_thresholds(
-        metric => 'temp_'.$self->{lgpFlexibleEntryDataLabel},
+        metric => 'temp_'.$self->{label},
         warning => $device_threshold,
         critical => $device_threshold,
     );
   } else {
     $self->set_thresholds(
-        metric => 'temp_'.$self->{lgpFlexibleEntryDataLabel},
+        metric => 'temp_'.$self->{label},
         warning => "",
         critical => "",
     );
   }
   $self->add_message($self->check_thresholds(
-      metric => 'temp_'.$self->{lgpFlexibleEntryDataLabel},
+      metric => 'temp_'.$self->{label},
       value => $self->{lgpFlexibleEntryValue},
   ));
   $self->add_perfdata(
-      label => 'temp_'.$self->{lgpFlexibleEntryDataLabel},
+      label => 'temp_'.$self->{label},
       value => $self->{lgpFlexibleEntryValue},
   );
 }
@@ -330,11 +342,11 @@ sub finish {
 
 sub check {
   my ($self) = @_;
-  $self->add_info(sprintf '%s is %.2f%%', $self->{lgpFlexibleEntryDataLabel},
+  $self->add_info(sprintf '%s is %.2f%%', $self->{label},
       $self->{lgpFlexibleEntryValue});
   $self->add_ok();
   $self->add_perfdata(
-      label => 'pct_'.$self->{lgpFlexibleEntryDataLabel},
+      label => 'pct_'.$self->{label},
       value => $self->{lgpFlexibleEntryValue},
       uom => '%',
       max => 100,
@@ -356,7 +368,7 @@ sub finish {
 
 sub check {
   my ($self) = @_;
-  $self->add_info(sprintf '%s is %.2f%%', $self->{lgpFlexibleEntryDataLabel},
+  $self->add_info(sprintf '%s is %.2f%%', $self->{label},
       $self->{lgpFlexibleEntryValue});
   my $w_threshold = undef;
   my $c_threshold = undef;
@@ -368,17 +380,17 @@ sub check {
   }
   if ($w_threshold || $c_threshold) {
     $self->set_thresholds(
-        metric => 'fan_'.$self->{lgpFlexibleEntryDataLabel},
+        metric => 'fan_'.$self->{label},
         warning => $w_threshold,
         critical => $c_threshold,
     );
   }
   $self->add_message($self->check_thresholds(
-      metric => 'fan_'.$self->{lgpFlexibleEntryDataLabel},
+      metric => 'fan_'.$self->{label},
       value => $self->{lgpFlexibleEntryValue}
   ));
   $self->add_perfdata(
-      label => 'fan_'.$self->{lgpFlexibleEntryDataLabel},
+      label => 'fan_'.$self->{label},
       value => $self->{lgpFlexibleEntryValue},
       uom => '%',
       max => 100,
@@ -423,7 +435,7 @@ sub finish {
 
 sub check {
   my ($self) = @_;
-  $self->add_info(sprintf 'humidity %s is %.2f%%', $self->{lgpFlexibleEntryDataLabel},
+  $self->add_info(sprintf 'humidity %s is %.2f%%', $self->{label},
       $self->{lgpFlexibleEntryValue});
   my $device_threshold = "";
   if (exists $self->{lgpFlexibleEntryLowThreshold} and
@@ -436,23 +448,23 @@ sub check {
   }
   if ($device_threshold) {
     $self->set_thresholds(
-        metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
+        metric => 'hum_'.$self->{label},
         warning => $device_threshold,
         critical => $device_threshold,
     );
-  } else {
+  } elsif ($self->{label} !~ /Today/) {
     $self->set_thresholds(
-        metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
+        metric => 'hum_'.$self->{label},
         warning => 70,
         critical => 80,
     );
   }
   $self->add_message($self->check_thresholds(
-      metric => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
+      metric => 'hum_'.$self->{label},
       value => $self->{lgpFlexibleEntryValue},
   ));
   $self->add_perfdata(
-      label => 'hum_'.$self->{lgpFlexibleEntryDataLabel},
+      label => 'hum_'.$self->{label},
       value => $self->{lgpFlexibleEntryValue},
       uom => "%",
   );

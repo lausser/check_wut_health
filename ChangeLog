@@ -1,3 +1,6 @@
+* 2023-06-30 2.14.0.1
+  remove thresholds for daily highest/lowest humidity (Liebert)
+  remove quotes from perfdata labels
 * 2023-06-29 2.14
   use Liebert Flexible built-in thresholds
 * 2023-05-31 2.13.1.1
