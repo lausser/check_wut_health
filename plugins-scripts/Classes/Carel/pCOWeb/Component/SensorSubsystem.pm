@@ -55,7 +55,9 @@ sub check {
   }
   if (defined $self->{din8}) {
     if ($self->{din8}) {
-      $self->add_critical("Remote ON/OFF");
+      # like High Pressure Switch Alarm
+      # Pep: the vendor told us that because of our type of installation Remote ON/OFF can be ignored as well
+      $self->add_critical_mitigation("Remote ON/OFF");
     }
   }
   if (defined $self->{din9}) {
