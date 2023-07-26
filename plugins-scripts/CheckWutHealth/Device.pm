@@ -77,6 +77,7 @@ sub classify {
       }
     }
   }
+  $self->{generic_class} = "CheckWutHealth::Generic";
   return $self;
 }
 
