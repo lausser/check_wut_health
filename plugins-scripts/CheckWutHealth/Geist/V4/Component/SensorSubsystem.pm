@@ -46,7 +46,28 @@ sub finish {
   }
   $self->{name} = $self->normalize($self->{name});
   $self->{name} = $self->sensortype()."_".$self->{name};
-  $self->{label} = lc $self->{name}."_".$self->{flat_indices};
+  #$self->{label} = lc $self->{name}."_".$self->{flat_indices};
+  #koennte ueberfluessig sein, jedenfalls in den beispielen ist es so.
+  #da wurden labels vergeben, die eindeutig sind.
+  # z.b.
+  # t3hdSensorExtAName: Top
+  # t3hdSensorExtBName: Bot
+  # t3hdSensorIntName: Mid
+  # t3hdSensorName: GT3HD
+  # thdSensorName: GTHD
+  #
+  # dann wurden Labels vergeben (in der gui steht dann unter "GT3HD" ein "Temp_Hum_Mid"
+  # t3hdSensorExtAName: Top
+  # t3hdSensorExtBName: Bot
+  # t3hdSensorIntName: Mid
+  # t3hdSensorName: Temp_Hum_Mid
+  # thdSensorName: Temp_Hum_Bottom
+  # 
+  # wobei Temp_Hum_Mid und Temp_Hum_Bottom Sektionsueberschriften in der Gui sind
+  # Top Mid Bot werden unter der Spalte "Label" gefuehrt (in einer t3hd-Sektion)
+  # und GTHD unter der Spalte "Name" (in einer thd-Sektion)
+
+  $self->{label} = lc $self->{name}
 }
 
 sub avail {
@@ -177,52 +198,76 @@ sub finish {
 
 sub check {
   my ($self) = @_;
-  $self->SUPER::avail();
-  my $int_name = $self->sensortype()."_".$self->normalize($self->{t3hdSensorIntName});
-  my $int_label = lc $int_name."_".$self->{flat_indices};
+  my $sensor_name = $self->sensortype()."_".$self->normalize($self->{t3hdSensorName});
+  my $int_name = $sensor_name ."_".$self->normalize($self->{t3hdSensorIntName});
+  my $int_label = lc $int_name;
   my $int_temp = $int_label."_temp";
   my $int_hum = $int_label."_hum";
-  my $exta_name = $self->sensortype()."_".$self->normalize($self->{t3hdSensorExtAName});
-  my $exta_label = lc $int_name."_".$self->{flat_indices};
-  my $exta_temp = $int_label."_temp";
-  my $extb_name = $self->sensortype()."_".$self->normalize($self->{t3hdSensorExtBName});
-  my $extb_label = lc $int_name."_".$self->{flat_indices};
-  my $extb_temp = $int_label."_temp";
 
-  $self->set_thresholds(metric => $int_temp,
-      warning => '0:50',
-      critical => '0:70',
-  );
-  $self->set_thresholds(metric => $int_hum,
-      warning => '70',
-      critical => '80',
-  );
-  $self->add_message($self->check_thresholds(metric => $int_temp,
-      value => $self->{t3hdSensorIntTemp}),
-      sprintf("int. temperature %.1f%s", $self->{t3hdSensorIntTemp}, $self->{temperatureUnits}));
-  $self->add_message($self->check_thresholds(metric => $int_hum,
-      value => $self->{t3hdSensorIntHumidity}),
-      sprintf("int. humdidity %.1f%%", $self->{t3hdSensorIntHumidity}));
+  my $exta_name = $sensor_name ."_".$self->normalize($self->{t3hdSensorExtAName});
+  my $exta_label = lc $exta_name;
+  my $exta_temp = $exta_label."_temp";
 
-  $self->set_thresholds(metric => $exta_temp,
-      warning => '0:50',
-      critical => '0:70',
-  );
-  $self->add_message($self->check_thresholds(metric => $exta_temp,
-      value => $self->{t3hdSensorExtATemp}),
-      sprintf("exta. temperature %.1f%s", $self->{t3hdSensorExtATemp}, $self->{temperatureUnits}));
-  $self->add_perfdata(label => $exta_temp,
-      value => $self->{t3hdSensorExtATemp});
+  my $extb_name = $sensor_name ."_".$self->normalize($self->{t3hdSensorExtBName});
+  my $extb_label = lc $extb_name;
+  my $extb_temp = $extb_label."_temp";
 
-  $self->set_thresholds(metric => $extb_temp,
-      warning => '0:50',
-      critical => '0:70',
-  );
-  $self->add_message($self->check_thresholds(metric => $extb_temp,
-      value => $self->{t3hdSensorExtBTemp}),
-      sprintf("extb. temperature %.1f%s", $self->{t3hdSensorExtBTemp}, $self->{temperatureUnits}));
-  $self->add_perfdata(label => $extb_temp,
-      value => $self->{t3hdSensorExtBTemp});
+  if ($self->{t3hdSensorAvail} eq "Available") {
+    $self->add_info(sprintf "%s is available, temperature %.2f%s, humidity %.2f%%",
+        $int_name, $self->{t3hdSensorIntTemp}, $self->{temperatureUnits},
+        $self->{t3hdSensorIntHumidity});
+    $self->set_thresholds(metric => $int_temp,
+        warning => '0:50',
+        critical => '0:70',
+    );
+    $self->set_thresholds(metric => $int_hum,
+        warning => '70',
+        critical => '80',
+    );
+    $self->add_message($self->worst_level(
+        $self->check_thresholds(metric => $int_temp,
+            value => $self->{t3hdSensorIntTemp}),
+        $self->check_thresholds(metric => $int_hum,
+            value => $self->{t3hdSensorIntHumidity})
+    ));
+    $self->add_perfdata(label => $int_temp,
+        value => $self->{t3hdSensorIntTemp});
+    $self->add_perfdata(label => $int_hum,
+        uom => "%",
+        value => $self->{t3hdSensorIntHumidity});
+  } else {
+    $self->add_warning_mitigation(sprintf "%s is not available", $int_name);
+  }
+
+  if ($self->{t3hdSensorExtAAvail} eq "Available") {
+    $self->add_info(sprintf "%s is available, temperature %.2f%s",
+        $exta_name, $self->{t3hdSensorExtATemp}, $self->{temperatureUnits});
+    $self->set_thresholds(metric => $exta_temp,
+        warning => '0:50',
+        critical => '0:70',
+    );
+    $self->add_message($self->check_thresholds(metric => $exta_temp,
+        value => $self->{t3hdSensorExtATemp}));
+    $self->add_perfdata(label => $exta_temp,
+        value => $self->{t3hdSensorExtATemp});
+  } else {
+    $self->add_warning_mitigation(sprintf "%s is not available", $exta_name);
+  }
+
+  if ($self->{t3hdSensorExtBAvail} eq "Available") {
+    $self->add_info(sprintf "%s is available, temperature %.2f%s",
+        $extb_name, $self->{t3hdSensorExtBTemp}, $self->{temperatureUnits});
+    $self->set_thresholds(metric => $extb_temp,
+        warning => '0:50',
+        critical => '0:70',
+    );
+    $self->add_message($self->check_thresholds(metric => $extb_temp,
+        value => $self->{t3hdSensorExtBTemp}));
+    $self->add_perfdata(label => $extb_temp,
+        value => $self->{t3hdSensorExtBTemp});
+  } else {
+    $self->add_warning_mitigation(sprintf "%s is not available", $extb_name);
+  }
 }
 
 package CheckWutHealth::Geist::V4::Components::SensorSubsystem::ThdSensor;
@@ -257,6 +302,7 @@ sub check {
   $self->add_perfdata(label => $temp,
       value => $self->{thdSensorTemp});
   $self->add_perfdata(label => $hum,
+      uom => "%",
       value => $self->{thdSensorHumidity});
 }
 

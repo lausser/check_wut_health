@@ -13,6 +13,9 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/TableItem.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/MIB2MIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/SNMPV2TC.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/INETADDRESSMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/SNMPV2TCV1MIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/HOSTRESOURCESMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/EMDMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ENVIROMUX5D.pm \
@@ -37,7 +40,9 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/RITTALLCPDXMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/KELVINPCOWEBLCPDXMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/CARELUG40CDZMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/GEISTV4MIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/GEISTV4MIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ASSETMANAGEMENTMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/PDU2MIB.pm
 
 EXTRA_MODULES=\
   CheckWutHealth/WebGraphThermoHygro.pm \
@@ -73,6 +78,9 @@ EXTRA_MODULES=\
   CheckWutHealth/Geist/V4.pm \
   CheckWutHealth/Geist/V4/Component/EnvironmentalSubsystem.pm \
   CheckWutHealth/Geist/V4/Component/SensorSubsystem.pm \
+  CheckWutHealth/Raritan/PDU2.pm \
+  CheckWutHealth/Raritan/PDU2/Component/EnvironmentalSubsystem.pm \
+  CheckWutHealth/Raritan/PDU2/Component/SensorSubsystem.pm \
   CheckWutHealth/Device.pm
 
 SED=/bin/sed
