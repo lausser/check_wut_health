@@ -59,6 +59,8 @@ sub classify {
         # Euch sollte man stundenlang in den Sack dreschen!
       } elsif ($self->implements_mib('ENP-RDU-MIB')) {
         $self->rebless('CheckWutHealth::Emerson::RDU');
+      } elsif ($self->implements_mib('DIDACTUM-SYSTEM-MIB')) {
+        $self->rebless('CheckWutHealth::Didactum');
       } else {
         if (my $class = $self->discover_suitable_class()) {
           $self->rebless($class);

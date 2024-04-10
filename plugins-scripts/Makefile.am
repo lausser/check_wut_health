@@ -42,7 +42,9 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/CARELUG40CDZMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/GEISTV4MIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ASSETMANAGEMENTMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/PDU2MIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/PDU2MIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/DIDACTUMSYSTEMMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LMSENSORSMIB.pm
 
 EXTRA_MODULES=\
   CheckWutHealth/WebGraphThermoHygro.pm \
@@ -81,6 +83,9 @@ EXTRA_MODULES=\
   CheckWutHealth/Raritan/PDU2.pm \
   CheckWutHealth/Raritan/PDU2/Component/EnvironmentalSubsystem.pm \
   CheckWutHealth/Raritan/PDU2/Component/SensorSubsystem.pm \
+  CheckWutHealth/Didactum/Component/EnvironmentalSubsystem.pm \
+  CheckWutHealth/Didactum/Component/SensorSubsystem.pm \
+  CheckWutHealth/Didactum.pm \
   CheckWutHealth/Device.pm
 
 SED=/bin/sed
