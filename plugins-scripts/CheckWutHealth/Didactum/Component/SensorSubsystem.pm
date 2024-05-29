@@ -60,6 +60,20 @@ sub init {
       1;
     }
   } @{$self->{elements}};
+  #
+  # mit --name kann nach Modulen gefiltert werden, s.o. beim ersten Walk.
+  # Die Sensoren werden Modulen zugeordnet bzw nach Modul gefiltert.
+  # --name mod1 bedeutet: es werden ueberhaupt nur Sensoren verarbeitet,
+  # die am mod1 haengen.
+  # Mit --name2 kann man nach Sensornamen filtern. (Entweder zusaetzlich zu
+  # --name oder ohne, dann unabhaengig vom Modul)
+  foreach my $tab (qw(discretes analogs outlets canalogs elements)) {
+    if (exists $self->{$tab} and scalar(@{$self->{$tab}}) > 0) {
+      @{$self->{$tab}} = grep {
+        $self->filter_name2($_->{name});
+      } @{$self->{$tab}};
+    }
+  }
 }
 
 
@@ -71,6 +85,11 @@ use strict;
 package CheckWutHealth::Didactum::Components::SensorSubsystem::InternalSensorOutlet;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
+
+sub finish {
+  my ($self) = @_;
+  $self->{name} = $self->{ctlInternalSensorsOutletName};
+}
 
 sub check {
   my ($self) = @_;
@@ -96,6 +115,11 @@ package CheckWutHealth::Didactum::Components::SensorSubsystem::InternalSensorDis
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
 
+sub finish {
+  my ($self) = @_;
+  $self->{name} = $self->{ctlInternalSensorsDiscretName};
+}
+
 sub check {
   my ($self) = @_;
   $self->add_info(sprintf '%s value %.2f is %s',
@@ -116,6 +140,7 @@ use strict;
 
 sub finish {
   my ($self) = @_;
+  $self->{name} = $self->{ctlUnitElementName};
   $self->{label} = lc $self->{ctlUnitElementName};
   $self->{label} =~ s/[ -]/_/g;
   if ($self->{ctlUnitElementClass} eq "discrete") {
@@ -140,6 +165,11 @@ sub check {
 package CheckWutHealth::Didactum::Components::SensorSubsystem::ElementAnalog;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
+
+sub finish {
+  my ($self) = @_;
+  $self->{name} = $self->{ctlUnitElementName};
+}
 
 sub check {
   my ($self) = @_;
@@ -171,6 +201,11 @@ package CheckWutHealth::Didactum::Components::SensorSubsystem::ElementDiscrete;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
 
+sub finish {
+  my ($self) = @_;
+  $self->{name} = $self->{ctlUnitElementName};
+}
+
 sub check {
   my ($self) = @_;
   $self->add_info(sprintf '%s state is %s',
@@ -190,6 +225,7 @@ use strict;
 
 sub finish {
   my ($self) = @_;
+  $self->{name} = $self->{ctlInternalSensorsAnalogName};
   $self->{label} = lc $self->{ctlInternalSensorsAnalogName};
   $self->{label} =~ s/[ -]/_/g;
 }
@@ -222,6 +258,7 @@ use strict;
 
 sub finish {
   my ($self) = @_;
+  $self->{name} = $self->{ctlCANSensorsAnalogName};
   $self->{label} = lc $self->{ctlCANSensorsAnalogName};
   $self->{label} =~ s/[ -]/_/g;
 }
