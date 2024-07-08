@@ -105,7 +105,7 @@ sub check {
       value => $self->{tempSensorTemp}),
       sprintf("temperature %.1f%s", $self->{tempSensorTemp}, $self->{temperatureUnits}));
   $self->add_perfdata(label => $temp,
-      value => $self->{thdSensorTemp});
+      value => $self->{tempSensorTemp});
 }
 
 package CheckWutHealth::Geist::V4::Components::SensorSubsystem::AirflowSensor;
