@@ -107,9 +107,11 @@ sub rebless {
     bless $self, "CheckWutHealth::WebGraphThermoHygro::SensorSubsystem::Sensor::Temperature";
   } elsif ($self->{wtWebGraphThermHygroPortName} =~ /^hum/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygro::SensorSubsystem::Sensor::Humidity";
-  } elsif ($self->{wtWebGraphThermoHygroPortName} =~ /rel.*feuchte/i) {
+  } elsif ($self->{wtWebGraphThermHygroPortName} =~ /rel.*feuchte/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygro::SensorSubsystem::Sensor::Humidity";
   } elsif ($self->{wtWebGraphThermHygroPortName} =~ /^pres/i) {
+    bless $self, "CheckWutHealth::WebGraphThermoHygro::SensorSubsystem::Sensor::Pressure";
+  } elsif ($self->{wtWebGraphThermHygroPortName} =~ /Luftdruck/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygro::SensorSubsystem::Sensor::Pressure";
   }
 }
@@ -360,6 +362,8 @@ sub rebless {
   } elsif ($self->{wtWebGraphThermoHygroPortName} =~ /rel.*feuchte/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Humidity";
   } elsif ($self->{wtWebGraphThermoHygroPortName} =~ /^pres/i) {
+    bless $self, "CheckWutHealth::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Pressure";
+  } elsif ($self->{wtWebGraphThermoHygroPortName} =~ /Luftdruck/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Pressure";
   }
 }
