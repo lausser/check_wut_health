@@ -44,7 +44,10 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/ASSETMANAGEMENTMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/PDU2MIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/DIDACTUMSYSTEMMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LMSENSORSMIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LMSENSORSMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/UCDDLMODMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/UCDSNMPMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/CARELRITTALLCP3311MIB.pm
 
 EXTRA_MODULES=\
   CheckWutHealth/WebGraphThermoHygro.pm \
@@ -127,6 +130,7 @@ $(libexec_SCRIPTS) : $(EXTRA_DIST)
 	if [ "${STANDALONE}" == "yes" ]; then \
 		$(ECHO) i am standalone; \
 		for m in ${GL_MODULES}; do \
+			$(ECHO) "# pm file $$m" >> $@; \
 			$(SED) -e 's/^1;//g' < $$m | $(SED) -e '/^__END__/,$$d' | $(SED) -e '/^__PACKAGE__/,$$d' | $(AWK) -f ./subst >> $@; \
 		done \
 	fi
