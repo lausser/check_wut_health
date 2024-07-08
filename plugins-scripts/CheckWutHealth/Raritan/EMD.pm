@@ -47,15 +47,39 @@ use strict;
 
 sub finish {
   my ($self) = @_;
-  $self->{externalSensorEnabledThresholds} = 
-      unpack("B8", $self->{externalSensorEnabledThresholds});
+  if (! $self->{externalSensorType} and
+      ! $self->{externalSensorUnits} and
+      $self->{externalSensorName} =~ /humidity/i) {
+    $self->{externalSensorType} = "humidity";
+    $self->{externalSensorUnits} = "percent";
+  }
   if ($self->{externalSensorType} eq "onOff") {
     bless $self, "CheckWutHealth::Raritan::EMD::Component::SensorSubsystem::Sensor::onOff";
+  }
+  $self->{label} = $self->{externalSensorName} =~ s/[^a-zA-Z0-9]/_/gr;
+  if ($self->{externalSensorUnits}) {
+    my $divisor = $self->{externalSensorDecimalDigits} ? 10**$self->{externalSensorDecimalDigits} : 1;
+    foreach (qw(externalSensorLowerCriticalThreshold externalSensorLowerWarningThreshold
+        externalSensorUpperCriticalThreshold externalSensorUpperWarningThreshold
+        externalSensorMaximum
+        externalSensorMinimum
+        measurementsExternalSensorValue)) {
+      $self->{$_} /= $divisor if $self->{$_};
+    }
+    $self->{externalSensorUnits} = "C" if $self->{externalSensorUnits} eq "degreeC";
+    $self->{externalSensorUnits} = "F" if $self->{externalSensorUnits} eq "degreeF";
+    $self->{externalSensorUnits} = "%" if $self->{externalSensorUnits} eq "percent";
   }
 }
 
 sub check {
   my $self = shift;
+  if ($self->{externalSensorUnits}) {
+    # measurements mit dem Messwert wird erst nach dem finish() noch
+    # dazugemergt.
+    my $divisor = $self->{externalSensorDecimalDigits} ? 10**$self->{externalSensorDecimalDigits} : 1;
+    $self->{measurementsExternalSensorValue} /= $divisor if $self->{measurementsExternalSensorValue};
+  }
   $self->add_info(sprintf "%s sensor %s has state %s",
       $self->{externalSensorType},
       $self->{externalSensorName},
@@ -65,7 +89,55 @@ sub check {
   } else {
     $self->add_ok();
   }
+  $self->add_sensor_perfdata();
 }
+
+sub bin_and {
+  my ($self, $bin1, $bin2) = @_;
+  return (($bin1 & $bin2) ne "00000000") ? 1 : 0;
+}
+
+sub add_sensor_perfdata {
+  my $self = shift;
+  return if $self->{externalSensorUnits} eq "none";
+  my $externalSensorEnabledThresholds = unpack("B*", $self->{externalSensorEnabledThresholds});
+  my $warning = "";
+  my $critical = "";
+  $critical .= $self->{externalSensorLowerCriticalThreshold}.":"
+      if $self->bin_and($externalSensorEnabledThresholds, "10000000");
+  $warning .= $self->{externalSensorLowerWarningThreshold}.":"
+      if $self->bin_and($externalSensorEnabledThresholds, "01000000");
+  $warning .= $self->{externalSensorUpperWarningThreshold}
+      if $self->bin_and($externalSensorEnabledThresholds, "00100000");
+  $critical .= $self->{externalSensorUpperCriticalThreshold}
+      if $self->bin_and($externalSensorEnabledThresholds, "00010000");
+  # externalSensorEnabledThresholds OBJECT-TYPE
+  #    SYNTAX     BITS { lowerCritical(0),
+  #                      lowerWarning(1),
+  #                      upperWarning(2),
+  #                      upperCritical(3) }
+  # 0=links....3=rechts. lc und uc = 0x09
+  $self->{externalSensorEnabledThresholdsHuman} = $externalSensorEnabledThresholds;
+  if ($self->{externalSensorUnits} eq "percent" || $self->{externalSensorUnits} eq "%") {
+    $self->add_perfdata(label => $self->{label},
+        value => $self->{measurementsExternalSensorValue},
+        warning => $warning,
+        critical => $critical,
+        uom => "%",
+        min => $self->{externalSensorMinimum},
+        max => $self->{externalSensorMaximum},
+    );
+  } else {
+    $self->add_perfdata(label => $self->{label},
+        value => $self->{measurementsExternalSensorValue},
+        warning => $warning,
+        critical => $critical,
+        min => $self->{externalSensorMinimum},
+        max => $self->{externalSensorMaximum},
+    );
+  }
+}
+
 
 package CheckWutHealth::Raritan::EMD::Component::SensorSubsystem::Sensor::onOff;
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
@@ -208,3 +280,70 @@ externalSensorYCoordinate:
 externalSensorZCoordinate:
 
 1..15
+
+
+[SENSOR_3]
+externalOnOffSensorSubtype: none
+externalSensorAccuracy: 0
+externalSensorChannelNumber: -1
+externalSensorDecimalDigits: 1
+externalSensorDescription:
+externalSensorEnabledThresholds: 11110000
+externalSensorHysteresis: 10
+externalSensorIsActuator: false
+externalSensorLowerCriticalThreshold: 100
+externalSensorLowerWarningThreshold: 150
+externalSensorMaximum: 1250
+externalSensorMinimum: -550
+externalSensorName: Temperature 1
+externalSensorPort: DEVICE-1WIREPORT:3
+externalSensorResolution: 1
+externalSensorSerialNumber: AEI5100396
+externalSensorStateChangeDelay: 0
+externalSensorTolerance: 0
+externalSensorType: temperature
+externalSensorUnits: degreeC
+externalSensorUpperCriticalThreshold: 350
+externalSensorUpperWarningThreshold: 300
+externalSensorXCoordinate:
+externalSensorYCoordinate:
+externalSensorZCoordinate:
+measurementsExternalSensorIsAvailable: true
+measurementsExternalSensorState: normal
+measurementsExternalSensorTimeStamp: 1720098446
+measurementsExternalSensorTimeStampLocal: Thu Jul  4 14:07:26 2024
+measurementsExternalSensorValue: 174
+info: temperature sensor Temperature 1 has state normal
+
+!! einer ohne type und unit, wird umgedengelt
+$VAR1 = bless( {
+  'externalSensorLowerWarningThreshold' => 40,
+  'externalSensorDecimalDigits' => 1,
+  'externalSensorMaximum' => 13500,
+  'externalSensorAccuracy' => 0,
+  'externalSensorZCoordinate' => '',
+  'externalSensorStateChangeDelay' => 0,
+  'externalSensorIsActuator' => 'false',
+  'externalSensorType' => undef,
+  'flat_indices' => '5',
+  'indices' => [
+    '5'
+  ],
+  'externalSensorPort' => 'DEVICE-1WIREPORT:3',
+  'externalSensorMinimum' => 0,
+  'externalSensorResolution' => 1,
+  'externalSensorEnabledThresholds' => '11110000',
+  'externalSensorUpperWarningThreshold' => 200,
+  'externalSensorUnits' => undef,
+  'externalSensorName' => 'Absolute Humidity 1',
+  'externalSensorDescription' => '',
+  'externalSensorChannelNumber' => -1,
+  'externalSensorYCoordinate' => '',
+  'externalSensorUpperCriticalThreshold' => 220,
+  'externalSensorHysteresis' => 10,
+  'externalSensorSerialNumber' => 'AEI5100396',
+  'externalSensorLowerCriticalThreshold' => 20,
+  'externalOnOffSensorSubtype' => 'none',
+  'externalSensorXCoordinate' => '',
+  'externalSensorTolerance' => 0
+}, 'CheckWutHealth::Raritan::EMD::Component::SensorSubsystem::Sensor' );
