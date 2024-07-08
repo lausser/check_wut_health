@@ -136,6 +136,8 @@ use strict;
 
 sub finish {
   my ($self) = @_;
+  # lgpEnvRemoteSensorUsrLabel: A1-3
+  $self->{label} = $self->{lgpEnvRemoteSensorUsrLabel} =~ s/'//r;
 }
 
 sub check {
