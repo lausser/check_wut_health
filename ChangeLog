@@ -1,3 +1,5 @@
+* 2024-07-10 4.0
+  improve rittal lcp dx behind pcoweb detection
 * 2024-04-29 3.2.1
   filter Didactum sensors with --name2 (modules with --name)
 * 2024-04-10 3.2
