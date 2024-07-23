@@ -1,3 +1,11 @@
+* 2024-07-23 4.1.0.1
+  bugfix in Rittal LCP DX Remote ON/OFF
+* 2024-07-19 4.1
+  add KNUERR-DCL-MIB, Emerson Knuerr devices
+* 2024-07-15 4.0.0.2
+  preload RITTAL-LCP-DX mib to improve detection if behind PcoWeb
+* 2024-07-10 4.0.0.1
+  remove a "used only once" warning
 * 2024-07-10 4.0
   improve rittal lcp dx behind pcoweb detection
 * 2024-04-29 3.2.1

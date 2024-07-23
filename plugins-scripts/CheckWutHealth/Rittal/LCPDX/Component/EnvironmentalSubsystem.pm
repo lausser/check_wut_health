@@ -38,8 +38,10 @@ sub init {
 sub check {
   my ($self) = @_;
   my $errors = 0;
+  $self->{num_alarms} = 0;
   foreach (grep { defined $self->{$_} } keys %{$self->{digital_descriptions}}) {
     $self->add_info($self->{digital_descriptions}->{$_}." is ".$self->{$_});
+    $self->{num_alarms}++;
     if ($_ eq "alarm-output") {
       next;
       # schon mal bestaetigt, dass das auf 1 war, in der GUI aber alles ok war
@@ -58,6 +60,32 @@ sub check {
       # nach sich zieht.
       $self->add_critical();
       $errors++;
+    } elsif ($_ eq "remote-on-off" and $self->{$_}) {
+      # Nachdem sich jetzt alle beschweren, dass dieser Alarm nicht sein sollte
+      # 7.2.1 Einschalten des LCP DX und des externen
+      # Verflüssigers
+      # Nachdem sowohl das LCP DX als auch der externe Ver-
+      # flüssiger bzw. der Verflüssiger zur indirekten Freikühlung
+      # elektrisch angeschlossen und am jeweiligen Haupt-
+      # schalter eingeschaltet sind, führen Sie abschließend
+      # noch die beiden folgenden Arbeitsschritte durch:
+      # Falls Sie das LCP DX über einen Fernschalter ein- und
+      # ausschalten möchten: Entfernen Sie in der Elektronik-
+      # box an der Klemmleiste X1A die Brücke zwischen den
+      # beiden Klemmen 30 und 80 („Remote On-Off“) und
+      # schließen Sie dort potentialfrei einen Fernschalter
+      # (Schließer) an (Abb. 31, Pos. 1).
+      # Wenn die beiden Klemmen nicht gebrückt sind, wird
+      # im Display die Status-Meldung „Din-Off“ angezeigt.
+      # Ändern Sie den Status des Geräts im Menü „On/Off
+      # Unit“ von „Off“ auf „On“ (vgl. Abschnitt 7.6 „Menü-
+      # ebene A „On/Off Unit““).
+      # Was auch immer das bedeutet, ob bei 1 eventuell gar kein solcher
+      # Fernschalter vorhanden ist oder ob 1 bedeutet, das Glump wurde damit
+      # ausgeknipst: mir ist das jetzt wurscht, 1 ist erstmal ok.
+      # Und sollte sich nochmal einer beschweren, dann fliegt der Remotekrempel
+      # ganz raus.
+      $self->add_ok();
     } elsif ($self->{$_}) {
       $self->add_critical();
       $errors++;
