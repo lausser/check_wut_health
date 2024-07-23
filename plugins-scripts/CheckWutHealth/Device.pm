@@ -17,10 +17,11 @@ sub classify {
       $year = $year % 100;
       $mon += 1;
 
-      $Monitoring::GLPlugin::SNMP::MibsAndOids::origin->{'CAREL-WHATSBEHIND-MIB'} = {
-        url => '',
-        name => 'PcoWeb with something behind it',
-      };
+      # causes ...used only once
+      #$Monitoring::GLPlugin::SNMP::MibsAndOids::origin->{'CAREL-WHATSBEHIND-MIB'} = {
+      #  url => '',
+      #  name => 'PcoWeb with something behind it',
+      #};
       $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'CAREL-WHATSBEHIND-MIB'} = {
         # pd pcoweb-dumb, nix angepasst, einfach nur Klima drangehaengt
         # pst pcoweb-with-sysoid-trick, sysoid hingefaked (s.u. Librenms)
@@ -38,16 +39,19 @@ sub classify {
       if ($self->opts->mode =~ /^my-/) {
         $self->load_my_extension();
       } elsif (defined $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pd-agentCode") and $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pd-agentCode") == 2 and defined $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pd-current-year") and $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pd-current-year") == $year and defined $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pd-current-month") and $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pd-current-month") == $mon) {
+        $self->require_mib("RITTAL-LCP-DX-MIB");
         foreach my $oid (keys %{$Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'RITTAL-LCP-DX-MIB'}}) {
           $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'RITTAL-LCP-DX-MIB'}->{$oid} =~ s/1\.3\.6\.1\.4\.1\.2606\.21/1.3.6.1.4.1.9839/g;
         }
         $self->rebless('CheckWutHealth::Rittal::LCPDX');
       } elsif (defined $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pst-agentCode") and $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pst-agentCode") == 2 and defined $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pst-current-year") and $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pst-current-year") == $year and defined $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pst-current-month") and $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "pst-current-month") == $mon) {
+        $self->require_mib("RITTAL-LCP-DX-MIB");
         foreach my $oid (keys %{$Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'RITTAL-LCP-DX-MIB'}}) {
           $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'RITTAL-LCP-DX-MIB'}->{$oid} =~ s/1\.3\.6\.1\.4\.1\.2606\.21/1.3.6.1.4.1.9839.2606/g;
         }
         $self->rebless('CheckWutHealth::Rittal::LCPDX');
       } elsif (defined $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "lcp-agentCode") and $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "lcp-agentCode") == 2 and defined $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "lcp-current-year") and $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "lcp-current-year") == $year and defined $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "lcp-current-month") and $self->get_snmp_object("CAREL-WHATSBEHIND-MIB", "lcp-current-month") == $mon) {
+        $self->require_mib("RITTAL-LCP-DX-MIB");
         $self->rebless('CheckWutHealth::Rittal::LCPDX');
       } elsif ($self->implements_mib('WebGraph-8xThermometer-MIB')) {
         $self->rebless('CheckWutHealth::WebioAn8Graph');
@@ -89,6 +93,8 @@ sub classify {
         # Euch sollte man stundenlang in den Sack dreschen!
       } elsif ($self->implements_mib('ENP-RDU-MIB')) {
         $self->rebless('CheckWutHealth::Emerson::RDU');
+      } elsif ($self->implements_mib('KNUERR-DCL-MIB')) {
+        $self->rebless('CheckWutHealth::Emerson::KnuerrDCL');
       } elsif ($self->implements_mib('DIDACTUM-SYSTEM-MIB')) {
         $self->rebless('CheckWutHealth::Didactum');
       } else {

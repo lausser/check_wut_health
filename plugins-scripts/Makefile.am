@@ -47,7 +47,8 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/LMSENSORSMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/UCDDLMODMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/UCDSNMPMIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/CARELRITTALLCP3311MIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/CARELRITTALLCP3311MIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/KNUERRDCLMIB.pm
 
 EXTRA_MODULES=\
   CheckWutHealth/WebGraphThermoHygro.pm \
@@ -72,6 +73,9 @@ EXTRA_MODULES=\
   CheckWutHealth/Emerson/RDU/Component/EnvironmentalSubsystem.pm \
   CheckWutHealth/Emerson/RDU/Component/SensorSubsystem.pm \
   CheckWutHealth/Emerson/RDU.pm \
+  CheckWutHealth/Emerson/KnuerrDCL/Component/EnvironmentalSubsystem.pm \
+  CheckWutHealth/Emerson/KnuerrDCL/Component/SensorSubsystem.pm \
+  CheckWutHealth/Emerson/KnuerrDCL.pm \
   CheckWutHealth/Rittal.pm \
   CheckWutHealth/Rittal/LCPDX.pm \
   CheckWutHealth/Rittal/LCPDX/Component/EnvironmentalSubsystem.pm \
