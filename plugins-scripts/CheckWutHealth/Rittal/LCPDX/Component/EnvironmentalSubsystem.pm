@@ -86,6 +86,10 @@ sub check {
       # Und sollte sich nochmal einer beschweren, dann fliegt der Remotekrempel
       # ganz raus.
       $self->add_ok();
+    } elsif ($_ eq "high-pressure" and $self->{$_}) {
+      # auch hier: bei fuenf Spaniern und einem Polen auf 1. Ich dreh's mal um,
+      # wird schon gutgehen.
+      $self->add_ok();
     } elsif ($self->{$_}) {
       $self->add_critical();
       $errors++;

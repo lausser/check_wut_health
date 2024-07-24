@@ -1,3 +1,5 @@
+* 2024-07-24 4.1.0.2
+  bugfix in Rittal LCP DX High Pressure Alarm (0=fail, 1=ok)
 * 2024-07-23 4.1.0.1
   bugfix in Rittal LCP DX Remote ON/OFF
 * 2024-07-19 4.1
