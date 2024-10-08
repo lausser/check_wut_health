@@ -1,3 +1,5 @@
+* 2024-10-08 4.1.2
+  handle W&T air pressure
 * 2024-10-08 4.1.1
   bugfix in PDU2, prefix the performance labels (temp, hum, etc. hat identical names)
 * 2024-07-24 4.1.0.2
