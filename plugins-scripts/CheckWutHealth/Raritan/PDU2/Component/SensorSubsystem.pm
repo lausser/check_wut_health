@@ -163,6 +163,10 @@ sub finish_after_merge {
     $self->{externalSensorUnits} = "F" if $self->{externalSensorUnits} eq "degreeF";
     $self->{externalSensorUnits} = "%" if $self->{externalSensorUnits} eq "percent";
   }
+  $self->{label} = "onoff_".$self->{label} if $self->{externalSensorType} eq "onOff";
+  $self->{label} = "distance_".$self->{label} if $self->{externalSensorType} eq "distance";
+  $self->{label} = "temp_".$self->{label} if $self->{externalSensorType} eq "temperature";
+  $self->{label} = "hum_".$self->{label} if $self->{externalSensorType} eq "humidity";
   bless $self, "CheckWutHealth::Raritan::PDU2::Component::SensorSubsystem::externalSensorConfigurationTable::".$self->{externalSensorType} if $self->{externalSensorType} eq "onOff";
   bless $self, "CheckWutHealth::Raritan::PDU2::Component::SensorSubsystem::externalSensorConfigurationTable::".$self->{externalSensorType} if $self->{externalSensorType} eq "distance";
 return;
@@ -401,6 +405,11 @@ package CheckWutHealth::Raritan::PDU2::Component::SensorSubsystem::externalSenso
 our @ISA = qw(CheckWutHealth::Raritan::PDU2::Component::SensorSubsystem::externalSensorConfigurationTable);
 use strict;
 
+sub finish {
+  my $self = shift;
+  $self->{perflabel_prefix} = "onoff_";
+}
+
 sub check {
   my $self = shift;
   $self->add_info(sprintf "%s %s %s is %s",
@@ -417,8 +426,8 @@ use strict;
 
 sub finish {
   my $self = shift;
+  $self->{perflabel_prefix} = "temp_";
 }
-
 
 sub check {
   my $self = shift;
@@ -436,6 +445,11 @@ sub check {
 package CheckWutHealth::Raritan::PDU2::Component::SensorSubsystem::externalSensorConfigurationTable::distance;
 our @ISA = qw(CheckWutHealth::Raritan::PDU2::Component::SensorSubsystem::externalSensorConfigurationTable);
 use strict;
+
+sub finish {
+  my $self = shift;
+  $self->{perflabel_prefix} = "distance_";
+}
 
 sub check {
   my $self = shift;
