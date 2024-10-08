@@ -101,9 +101,16 @@ sub rebless {
   # achtung, die name koennen auch so lauten: Temperatura, Humedad Relativa, Presischmiern Atmosfschmier
   if ($self->{wtWebGraphThermoHygroBaroPortName} =~ /^temp/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygroBaro::SensorSubsystem::Sensor::Temperature";
+  } elsif ($self->{wtWebGraphThermoHygroBaroPortName} =~ / grados/i) {
+    # Camara FyV 14 grados  (FyV = Frío y Vapor)
+    bless $self, "CheckWutHealth::WebGraphThermoHygroBaro::SensorSubsystem::Sensor::Temperature";
   } elsif ($self->{wtWebGraphThermoHygroBaroPortName} =~ /^hum/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygroBaro::SensorSubsystem::Sensor::Humidity";
-  } elsif ($self->{wtWebGraphThermoHygroBaroPortName} =~ /^pres/i) {
+  } elsif ($self->{wtWebGraphThermoHygroBaroPortName} =~ /rel.*feuchte/i) {
+    bless $self, "CheckWutHealth::WebGraphThermoHygroBaro::SensorSubsystem::Sensor::Humidity";
+  } elsif ($self->{wtWebGraphThermoHygroBaroPortName} =~ /(^pres|Air Pressure)/i) {
+    bless $self, "CheckWutHealth::WebGraphThermoHygroBaro::SensorSubsystem::Sensor::Pressure";
+  } elsif ($self->{wtWebGraphThermoHygroBaroPortName} =~ /Luftdruck/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygroBaro::SensorSubsystem::Sensor::Pressure";
   }
 }

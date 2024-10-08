@@ -105,6 +105,8 @@ sub rebless {
   # achtung, die name koennen auch so lauten: Temperatura, Humedad Relativa, Presischmiern Atmosfschmier
   if ($self->{wtWebGraphThermHygroPortName} =~ /^temp/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygro::SensorSubsystem::Sensor::Temperature";
+  } elsif ($self->{wtWebGraphThermHygroPortName} =~ / grados/i) {
+    bless $self, "CheckWutHealth::WebGraphThermoHygro::SensorSubsystem::Sensor::Temperature";
   } elsif ($self->{wtWebGraphThermHygroPortName} =~ /^hum/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygro::SensorSubsystem::Sensor::Humidity";
   } elsif ($self->{wtWebGraphThermHygroPortName} =~ /rel.*feuchte/i) {
@@ -356,6 +358,8 @@ sub rebless {
   my $self = shift;
   # achtung, die name koennen auch so lauten: Temperatura, Humedad Relativa, Presischmiern Atmosfschmier
   if ($self->{wtWebGraphThermoHygroPortName} =~ /^temp/i) {
+    bless $self, "CheckWutHealth::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Temperature";
+  } elsif ($self->{wtWebGraphThermoHygroPortName} =~ / grados/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Temperature";
   } elsif ($self->{wtWebGraphThermoHygroPortName} =~ /^hum/i) {
     bless $self, "CheckWutHealth::WebGraphThermoHygroUS::SensorSubsystem::Sensor::Humidity";
