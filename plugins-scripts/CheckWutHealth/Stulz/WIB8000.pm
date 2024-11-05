@@ -4,9 +4,6 @@ use strict;
 
 sub init {
   my $self = shift;
-  $self->get_snmp_objects("STULZ-WIB8000-MIB", qw(wibUnitname wibTempUnit
-      wibFirmware wibsettingAuxInLow wibsettingAuxInHigh wibsettingAuxInState
-  ));
   if ($self->mode =~ /device::sensor::status/) {
     $Monitoring::GLPlugin::SNMP::session->timeout(60) if $Monitoring::GLPlugin::SNMP::session;
     $self->analyze_and_check_sensor_subsystem("CheckWutHealth::Stulz::WIB8000::Component::SensorSubsystem");
@@ -30,19 +27,47 @@ sub init {
       $Monitoring::GLPlugin::SNMP::session->timeout() : 0;
   $Monitoring::GLPlugin::SNMP::session->timeout(5) if $timeout;
   $self->get_snmp_tables("STULZ-WIB8000-MIB", [
-      ["units", "unitstateTable", "CheckWutHealth::Stulz::GenericUnit", undef, ["hardwareTypeControllerType"]],
+    # wibIndexTable ist eine nicht-existierende Tabelle, die mit
+    # wibBusNumber, wibDeviceAddress, wibModuleNumber indiziert ist.
+    # Uns interessiert zunaechst die unitstateTable, aber deren Abfrage
+    # dauert ewig bzw. laeuft in den getnext-Fallback. Das gilt fuer alle
+    # Tabellen. Daher holen wir im ersten Schritt die drei Indices und fragen
+    # die interessanten Werte per GET ab, was wesentlich schneller geht.
+    # (Abgesehen davon, dass es unzaehlige Tabellen gibt, die in vernuenftiger
+    # Zeit nicht gewalkt werden koennen)
+    # infoSystemTable antwortet am schnellsten, daher kommen die Indices von ihr
+    #
+      #["units", "unitTable", "CheckWutHealth::Stulz::GenericUnit", undef, ["numberOfModules"]],
+      ["units", "unitTable", "CheckWutHealth::Stulz::GenericUnit"],
+      ["unitstates", "infoSystemTable", "CheckWutHealth::Stulz::GenericUnitState", undef, ["unitType"]],
   ]);
   $Monitoring::GLPlugin::SNMP::session->timeout($timeout) if $timeout;
+  # wir muessen wibBusNumber, wibDeviceAddress, wibModuleNumber kennen
+  # aber auch nur wibBusNumber, wibDeviceAddress fuer unitsettingHasFailure,
+  # einer OID die zur unitTable (Table for unit-settings) gehoert
+  # "modules" mit 3 indices initialisiert ein State-Objekt, dessen Werte aus
+  # unterschiedlichen 3-Index-Tables stammen. (Temp/Hum/OnOff...)
   @{$self->{bus_device_module}} = ();
-  foreach (@{$self->{units}}) {
+  @{$self->{bus_device}} = ();
+  my %seen;
+  foreach my $unitstate (@{$self->{unitstates}}) {
+    # unitstateTable Table for values in submenu unitstate
+    # unitstateEntry INDEX { wibBusNumber, wibDeviceAddress, wibModuleNumber }
     push(@{$self->{bus_device_module}}, {
-        bus => $_->{indices}->[0],
-        device => $_->{indices}->[1],
-        module => $_->{indices}->[2],
+        bus => $unitstate->{bus},
+        device => $unitstate->{device},
+        module => $unitstate->{module},
     });
+    # bus,device identifizieren eine unit
+    # unitTable Table for values in submenu unitSettings
+    # unitEntry INDEX { wibBusNumber, wibDeviceAddress }
+    unless (grep { $_->{bus} eq $unitstate->{bus} && $_->{device} eq $unitstate->{device} } @{$self->{bus_device}}) {
+      push(@{$self->{bus_device}}, {
+          bus => $unitstate->{bus},
+          device => $unitstate->{device},
+      });
+    }
   }
-  # bus,device identifizieren eine unit
-  # unitTable INDEX { wibBusNumber, wibDeviceAddress }
   $self->protect_value("bus_device_module", "bus_device_module", sub {
       my $bus_device_module_list = shift;
       # damit sich das Drecksteil vom Schock des letzten Walks erholen kann.
@@ -60,11 +85,14 @@ sub init {
 sub check {
   my $self = shift;
   $self->add_ok("WIB8000 ".$self->{wibUnitname});
+  foreach (@{$self->{unitstates}}) {
+    $_->check();
+  }
   foreach (@{$self->{units}}) {
     $_->check();
   }
-  $self->{num_units} = scalar(@{$self->{units}});
-  $self->{num_on_units} = scalar(grep { $_->{unitOnOff} eq "on" } @{$self->{units}});
+  $self->{num_units} = scalar(@{$self->{unitstates}});
+  $self->{num_on_units} = scalar(grep { $_->{unitOnOff} eq "on" } @{$self->{unitstates}});
   if ($self->opts->warningx || $self->opts->criticalx) {
     my $warningx = $self->opts->warningx;
     my $criticalx = $self->opts->criticalx;
@@ -89,6 +117,20 @@ sub check {
 }
 
 package CheckWutHealth::Stulz::GenericUnit;
+our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
+use strict;
+
+sub check {
+  my $self = shift;
+  if ($self->{unitsettingHasFailure}) {
+    $self->add_critical("unit %s has a settings failure",
+        $self->{unitsettingName});
+  }
+}
+
+
+package CheckWutHealth::Stulz::GenericUnitState;
+# unitstateEntry A row in the table of values in submenu unitstate
 our @ISA = qw(Monitoring::GLPlugin::SNMP::TableItem);
 use strict;
 
