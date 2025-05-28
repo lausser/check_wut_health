@@ -123,7 +123,7 @@ use strict;
 sub check {
   my $self = shift;
   if ($self->{unitsettingHasFailure}) {
-    $self->add_critical("unit %s has a settings failure",
+    $self->add_critical(sprintf "unit %s has a settings failure",
         $self->{unitsettingName});
   }
 }
