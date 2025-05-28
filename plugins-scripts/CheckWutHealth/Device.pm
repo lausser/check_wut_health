@@ -97,6 +97,8 @@ sub classify {
         $self->rebless('CheckWutHealth::Emerson::KnuerrDCL');
       } elsif ($self->implements_mib('DIDACTUM-SYSTEM-MIB')) {
         $self->rebless('CheckWutHealth::Didactum');
+      } elsif ($self->implements_mib('BOSS-SNMP-AGENT-MIB')) {
+        $self->rebless('CheckWutHealth::Carel::Boss');
       } else {
         if (my $class = $self->discover_suitable_class()) {
           $self->rebless($class);

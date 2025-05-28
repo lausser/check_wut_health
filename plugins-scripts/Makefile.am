@@ -48,7 +48,8 @@ GL_MODULES=\
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/UCDDLMODMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/UCDSNMPMIB.pm \
   ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/CARELRITTALLCP3311MIB.pm \
-  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/KNUERRDCLMIB.pm
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/KNUERRDCLMIB.pm \
+  ../GLPlugin/lib/Monitoring/GLPlugin/SNMP/MibsAndOids/BOSSSNMPAGENTMIB.pm
 
 EXTRA_MODULES=\
   CheckWutHealth/WebGraphThermoHygro.pm \
@@ -80,6 +81,9 @@ EXTRA_MODULES=\
   CheckWutHealth/Rittal/LCPDX.pm \
   CheckWutHealth/Rittal/LCPDX/Component/EnvironmentalSubsystem.pm \
   CheckWutHealth/Rittal/LCPDX/Component/SensorSubsystem.pm \
+  CheckWutHealth/Carel/Boss/Component/EnvironmentalSubsystem.pm \
+  CheckWutHealth/Carel/Boss/Component/SensorSubsystem.pm \
+  CheckWutHealth/Carel/Boss.pm \
   CheckWutHealth/Carel/pCOWeb/Component/SensorSubsystem.pm \
   CheckWutHealth/Carel/pCOWeb.pm \
   CheckWutHealth/Carel.pm \
