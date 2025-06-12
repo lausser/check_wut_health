@@ -10,33 +10,6 @@ sub init {
       l9d1CfgretHiHumThrsRelr l9d1CfgretLowHumThrsRelr
       l9d1CfgsupHiTThrsr l9d1CfgsupLowTThrsr
   ));
-  # Das Zeug ist Datentype Opaque, also willkuerlich binaer verschlonzt
-  foreach (qw(
-      l9d1RetAirHumValuer l9d1RetAirTempValuer l9d1SupAirTempValuer
-      l9d1CfgretLowTThrsr l9d1CfgretHiTThrsr
-      l9d1CfgretHiHumThrsRelr l9d1CfgretLowHumThrsRelr
-      l9d1CfgsupHiTThrsr l9d1CfgsupLowTThrsr
-  )) {
-    if (defined $self->{$_}) {
-      if ($self->{$_} =~ /^[0-9\.]*$/) {
-        # stammt wohl vom snmpwalk, passt
-      } elsif (length($self->{$_}) == 7) {
-        # raw to hex zum validieren
-        my $hex = unpack("H*", $self->{$_});
-        # einzelne bytes
-        my @bytes = $hex =~ /(..)/g;
-        if (@bytes != 7 || $bytes[0] ne '9f' || $bytes[1] ne '78' || $bytes[2] ne '04') {
-          # ja mei
-        } else {
-          my $binary_float = substr($self->{$_}, -4);
-          # big-endian single-precision float
-          $self->{$_} = unpack('f>', $binary_float);
-        }
-      } else {
-        # tut mir leid
-      }
-    }
-  }
 }
 
 sub check {

@@ -1487,9 +1487,10 @@ sub init {
           'level' => 'Warning',
        },
   };
+  $self->get_snmp_objects('BOSS-SNMP-AGENT-MIB', (qw(l9d1UnitStatus)));
   my @names = keys %{$self->{alarmoids}};
   # das sind jetzt natuerlich 900 snmpget. Mal schauen, wie schnell das ist
-  ####$self->get_snmp_objects('BOSS-SNMP-AGENT-MIB', @names);
+  $self->get_snmp_objects('BOSS-SNMP-AGENT-MIB', @names);
   $self->{alarms} = [];
   foreach my $name (@names) {
     if (!defined $self->{$name}) {
@@ -1506,28 +1507,6 @@ sub init {
   #$self->get_snmp_tables("BOSS-SNMP-AGENT-MIB", [
   #  ["alarms", "l9d1AlTable", "CheckWutHealth::Carel::Boss::Component::EnvironmentalSubsystem::Alarm"],
   #]);
-  $Monitoring::GLPlugin::SNMP::MibsAndOids::mibs_and_oids->{'BOSS-SNMP-AGENT-MIB'}->{l9d1UnitStatusDefinition} = "BOSS-SNMP-AGENT-MIB::l9d1UnitStatus";
-  $Monitoring::GLPlugin::SNMP::MibsAndOids::definitions->{'BOSS-SNMP-AGENT-MIB'}->{l9d1UnitStatus} = {
-      0 => "display off",
-      1 => "remote off",
-      2 => "3pos off",
-      3 => "monit off",
-      4 => "timer off",
-      5 => "alarm off",
-      6 => "shutdown del",
-      7 => "standby",
-      8 => "tr stby",
-      9 => "alarm stby",
-      10 => "fanback",
-      11 => "unit on",
-      12 => "warning on",
-      13 => "alarm on",
-      14 => "damper open",
-      15 => "power fail",
-      16 => "manual",
-      17 => "restart delay",
-  };
-  $self->get_snmp_objects('BOSS-SNMP-AGENT-MIB', (qw(l9d1UnitStatus)));
 }
 
 sub check {
@@ -1562,10 +1541,13 @@ sub finish {
 
 sub check {
   my $self = shift;
-  $self->add_info(sprintf "%s is %s", $self->{name}, $self->{status});
+  $self->add_info(sprintf "alarm %s/%s is %s",
+      $self->{name}, $self->{desc}, $self->{status});
   if ($self->{status} ne "false") {
     if ($self->{level} eq "Message") {
-      $self->add_ok();
+      # do not even show them. because if another alarm is active, the Message
+      # are shown as well and might cause confusion
+      # $self->add_ok();
     } elsif ($self->{level} eq "Warning") {
       $self->add_warning();
     } elsif ($self->{level} eq "Alarm") {
